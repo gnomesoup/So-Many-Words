@@ -51,8 +51,8 @@ async def windowRead(window: gui.Window):
                 WORD_INDEX = targetIndex
         if event == "cursorNext":
             targetIndex = WORD_INDEX + 1
-            if targetIndex > len(WORDS[PARAGRAPH_INDEX]):
-                if PARAGRAPH_INDEX != len(WORDS):
+            if targetIndex > len(WORDS[PARAGRAPH_INDEX]) - 1:
+                if PARAGRAPH_INDEX != len(WORDS) - 1:
                     PARAGRAPH_INDEX += 1
                     WORD_INDEX = 0
             else:
