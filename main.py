@@ -9,6 +9,7 @@ WORDS = []
 WORDS_LENGTH = 0
 WORD_INDEX = 0
 PARAGRAPH_INDEX = 0
+WPM = 200
 
 
 def CalculateDelayFromWPM(wpm: int) -> float:
@@ -26,10 +27,8 @@ async def windowRead(window: gui.Window):
             PLAY.set()
             break
         if event == "playPauseButton":
-            print("play pause event")
             playPause(window)
         if event == "pasteButton":
-            print("paste")
             WORDS, WORDS_LENGTH = textClean(clipboard.paste())
             WORD_INDEX = 0
             PARAGRAPH_INDEX = 0
@@ -38,8 +37,8 @@ async def windowRead(window: gui.Window):
             PARAGRAPH_INDEX = 0
             WORD_INDEX = 0
         if event == "cursorEnd":
-            PARAGRAPH_INDEX = len(WORDS)
-            WORD_INDEX = len(WORDS[PARAGRAPH_INDEX])
+            PARAGRAPH_INDEX = len(WORDS) - 1
+            WORD_INDEX = len(WORDS[PARAGRAPH_INDEX]) - 1
         if event == "cursorPrevious":
             targetIndex = WORD_INDEX - 1
             if targetIndex < 0:
@@ -47,7 +46,7 @@ async def windowRead(window: gui.Window):
                     WORD_INDEX = 0
                 else:
                     PARAGRAPH_INDEX -= 1
-                    WORD_INDEX = len(WORDS[PARAGRAPH_INDEX])
+                    WORD_INDEX = len(WORDS[PARAGRAPH_INDEX]) - 1
             else:
                 WORD_INDEX = targetIndex
         if event == "cursorNext":
@@ -66,13 +65,12 @@ async def windowRead(window: gui.Window):
     window.close()
     return
 
-
 async def wordHandler(window: gui.Window) -> None:
     global PARAGRAPH_INDEX, WORDS, WORDS_LENGTH, WORD_INDEX
     while True:
         if CLOSE:
             break
-        await wordAdvance()
+        await wordAdvance(WPM)
         words = WORDS[PARAGRAPH_INDEX]
         if WORD_INDEX < len(words):
             updateWord(window)
@@ -81,12 +79,11 @@ async def wordHandler(window: gui.Window) -> None:
             PARAGRAPH_INDEX += 1
             WORD_INDEX = 0
             if PARAGRAPH_INDEX >= len(WORDS):
-                print("Paragraph Done")
                 PARAGRAPH_INDEX = 0
                 WORD_INDEX = 0
                 playPause(window, forcePause=True)
             else:
-                await wordAdvance()
+                await wordAdvance(WPM)
         if CLOSE:
             break
     return
@@ -94,27 +91,33 @@ async def wordHandler(window: gui.Window) -> None:
 
 def updateWord(window: gui.Window) -> None:
     global PARAGRAPH_INDEX, WORDS, WORDS_LENGTH, WORD_INDEX
+    wordsUp = 20
+    halfUp = int(wordsUp / 2)
+    preIndex = 0
+    postIndex = 0
     words = WORDS[PARAGRAPH_INDEX]
+    if WORD_INDEX < 10:
+        print("small pre")
+        preIndex = 0
+        targetIndex = wordsUp - WORD_INDEX + 1
+        postIndex = targetIndex if (targetIndex + WORD_INDEX) < len(words) else None
+    elif (len(words) - WORD_INDEX) < halfUp:
+        print("small post")
+        targetIndex = WORD_INDEX - wordsUp
+        preIndex =  targetIndex if targetIndex > 0 else 0
+        postIndex = None
+    else:
+        print("balanced")
+        preIndex = WORD_INDEX - 10
+        postIndex = WORD_INDEX + 10
     word = words[WORD_INDEX]
-    print(f"{PARAGRAPH_INDEX=}")
     print(f"{WORD_INDEX=}")
-    print(f"{word=}")
-    if WORD_INDEX > 0:
-        targetIndex = WORD_INDEX - 10
-        actualIndex = targetIndex if targetIndex > 0 else WORD_INDEX
-        preWords = " ".join(words[0:actualIndex])
-    else:
-        preWords = []
-    if WORD_INDEX < len(words) - 1:
-        targetIndex = WORD_INDEX + 10
-        actualIndex = targetIndex if targetIndex < len(words) else WORD_INDEX + 1
-        postWords = " ".join(words[WORD_INDEX + 1 : actualIndex])
-    else:
-        postWords = []
+    print(f"{preIndex=}")
+    print(f"{postIndex=}")
     window["-OUTPUT-"].update(word)
-    window["wordStreamPre"].update(preWords)
+    window["wordStreamPre"].update(" ".join(words[preIndex:WORD_INDEX]))
     window["wordStreamCurrent"].update(word)
-    window["wordStreamPost"].update(postWords)
+    window["wordStreamPost"].update(" ".join(words[WORD_INDEX + 1:postIndex]))
     window.refresh()
 
 
@@ -188,7 +191,7 @@ if __name__ == "__main__":
 
     text = (
         "This utility will display words to you at the specified words per minute "
-        "(WPM).\nThis is currently set to {WPM}.\nCopy text to the clipboard and hit "
+        f"(WPM).\nThis is currently set to {WPM}.\nCopy text to the clipboard and hit "
         'the "Paste" button.'
     )
     clip = clipboard.paste()
