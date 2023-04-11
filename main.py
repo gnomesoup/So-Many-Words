@@ -48,22 +48,26 @@ async def windowRead(window: gui.Window):
                 else:
                     PARAGRAPH_INDEX -= 1
                     WORD_INDEX = len(WORDS[PARAGRAPH_INDEX])
+            else:
+                WORD_INDEX = targetIndex
         if event == "cursorNext":
             targetIndex = WORD_INDEX + 1
-            if targetIndex > WORDS[PARAGRAPH_INDEX]:
+            if targetIndex > len(WORDS[PARAGRAPH_INDEX]):
                 if PARAGRAPH_INDEX != len(WORDS):
                     PARAGRAPH_INDEX += 1
                     WORD_INDEX = 0
+            else:
+                WORD_INDEX = targetIndex
         if event.startswith("cursor"):
             playPause(window, forcePause=True)
-
+            updateWord(window)
 
     CLOSE = True
     window.close()
     return
 
 
-async def updateWordDisplay(window: gui.Window) -> None:
+async def wordHandler(window: gui.Window) -> None:
     global PARAGRAPH_INDEX, WORDS, WORDS_LENGTH, WORD_INDEX
     while True:
         if CLOSE:
@@ -71,28 +75,7 @@ async def updateWordDisplay(window: gui.Window) -> None:
         await wordAdvance()
         words = WORDS[PARAGRAPH_INDEX]
         if WORD_INDEX < len(words):
-            word = words[WORD_INDEX]
-            if WORD_INDEX > 0:
-                targetIndex = WORD_INDEX - 10
-                actualIndex = targetIndex if targetIndex > 0 else WORD_INDEX
-                preWords = " ".join(words[0:actualIndex])
-            else:
-                preWords = []
-            if WORD_INDEX < len(words) - 1:
-                targetIndex = WORD_INDEX + 10
-                actualIndex = (
-                    targetIndex if targetIndex < len(words) else WORD_INDEX + 1
-                )
-                postWords = " ".join(words[WORD_INDEX + 1 : actualIndex])
-            else:
-                postWords = []
-            if word.endswith("\n"):
-                await wordAdvance()
-            window["-OUTPUT-"].update(word)
-            window["wordStreamPre"].update(preWords)
-            window["wordStreamCurrent"].update(word)
-            window["wordStreamPost"].update(postWords)
-            window.refresh()
+            updateWord(window)
             WORD_INDEX += 1
         else:
             PARAGRAPH_INDEX += 1
@@ -109,6 +92,32 @@ async def updateWordDisplay(window: gui.Window) -> None:
     return
 
 
+def updateWord(window: gui.Window) -> None:
+    global PARAGRAPH_INDEX, WORDS, WORDS_LENGTH, WORD_INDEX
+    words = WORDS[PARAGRAPH_INDEX]
+    word = words[WORD_INDEX]
+    print(f"{PARAGRAPH_INDEX=}")
+    print(f"{WORD_INDEX=}")
+    print(f"{word=}")
+    if WORD_INDEX > 0:
+        targetIndex = WORD_INDEX - 10
+        actualIndex = targetIndex if targetIndex > 0 else WORD_INDEX
+        preWords = " ".join(words[0:actualIndex])
+    else:
+        preWords = []
+    if WORD_INDEX < len(words) - 1:
+        targetIndex = WORD_INDEX + 10
+        actualIndex = targetIndex if targetIndex < len(words) else WORD_INDEX + 1
+        postWords = " ".join(words[WORD_INDEX + 1 : actualIndex])
+    else:
+        postWords = []
+    window["-OUTPUT-"].update(word)
+    window["wordStreamPre"].update(preWords)
+    window["wordStreamCurrent"].update(word)
+    window["wordStreamPost"].update(postWords)
+    window.refresh()
+
+
 async def wordAdvance(wpm: float = None) -> None:
     wpm = wpm or 250
     delay = CalculateDelayFromWPM(wpm)
@@ -120,7 +129,7 @@ async def wordAdvance(wpm: float = None) -> None:
 
 
 async def main(window: gui.Window):
-    await asyncio.gather(windowRead(window), updateWordDisplay(window))
+    await asyncio.gather(windowRead(window), wordHandler(window))
     return
 
 
@@ -149,16 +158,24 @@ if __name__ == "__main__":
     layout = [
         [gui.Text("Ready?", font=("Any", 64, "bold"), key="-OUTPUT-")],
         [
-            gui.Text("press", key="wordStreamPre", pad=((5, 0), 3)),
-            gui.Text("play", key="wordStreamCurrent", pad=(0, 3)),
-            gui.Text("to begin", key="wordStreamPost", pad=((0, 5), 3)),
+            gui.Text("press", key="wordStreamPre", pad=((5, 0), 3), font=("Any", 16)),
+            gui.Text(
+                "play",
+                key="wordStreamCurrent",
+                pad=(0, 3),
+                text_color="Red",
+                font=("Any", 16),
+            ),
+            gui.Text(
+                "to begin", key="wordStreamPost", pad=((0, 5), 3), font=("Any", 16)
+            ),
         ],
         [
             gui.Button("Paste", key="pasteButton"),
             gui.Button("Close"),
         ],
         [
-            gui.Button("|<", key="cursorBegining"),
+            gui.Button("|<", key="cursorBeginning"),
             gui.Button("<", key="cursorPrevious"),
             gui.Button("Play", key="playPauseButton"),
             gui.Button(">", key="cursorNext"),
