@@ -9,7 +9,7 @@ WORDS = []
 WORDS_LENGTH = 0
 WORD_INDEX = 0
 PARAGRAPH_INDEX = 0
-WPM = 200
+WPM = 225
 
 
 def CalculateDelayFromWPM(wpm: int) -> float:
@@ -91,29 +91,19 @@ async def wordHandler(window: gui.Window) -> None:
 
 def updateWord(window: gui.Window) -> None:
     global PARAGRAPH_INDEX, WORDS, WORDS_LENGTH, WORD_INDEX
-    wordsUp = 20
+    wordsUp = 16
     halfUp = int(wordsUp / 2)
-    preIndex = 0
-    postIndex = 0
     words = WORDS[PARAGRAPH_INDEX]
-    if WORD_INDEX < 10:
-        print("small pre")
-        preIndex = 0
-        targetIndex = wordsUp - WORD_INDEX + 1
-        postIndex = targetIndex if (targetIndex + WORD_INDEX) < len(words) else None
-    elif (len(words) - WORD_INDEX) < halfUp:
-        print("small post")
-        targetIndex = WORD_INDEX - wordsUp
-        preIndex =  targetIndex if targetIndex > 0 else 0
-        postIndex = None
-    else:
-        print("balanced")
-        preIndex = WORD_INDEX - 10
-        postIndex = WORD_INDEX + 10
     word = words[WORD_INDEX]
-    print(f"{WORD_INDEX=}")
-    print(f"{preIndex=}")
-    print(f"{postIndex=}")
+    preIndex = WORD_INDEX - halfUp
+    postIndex = WORD_INDEX + halfUp
+    if preIndex < 0:
+        preIndex = None
+        postIndex = (wordsUp - WORD_INDEX) + WORD_INDEX
+    elif postIndex > len(words) - 1:
+        preIndex = wordsUp - (len(words) - 1) - WORD_INDEX
+        preIndex = preIndex if preIndex > 0 else 0
+        postIndex = None
     window["-OUTPUT-"].update(word)
     window["wordStreamPre"].update(" ".join(words[preIndex:WORD_INDEX]))
     window["wordStreamCurrent"].update(word)
