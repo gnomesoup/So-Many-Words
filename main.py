@@ -1,7 +1,12 @@
-import clipboard
-import PySimpleGUI as gui
 import asyncio
-import re
+import clipboard
+import plistlib
+from configparser import ConfigParser
+from os import path
+import base64
+
+# from pydantic import BaseModel, ValidationError, validator
+import PySimpleGUI as gui
 
 PLAY = asyncio.Event()
 CLOSE = False
@@ -9,7 +14,28 @@ WORDS = []
 WORDS_LENGTH = 0
 WORD_INDEX = 0
 PARAGRAPH_INDEX = 0
-WPM = 225
+CONFIG_PATH = "./so-many-words.ini"
+SMW_CONFIG = ConfigParser()
+WPM = 240
+
+# class SMWConfig(BaseModel):
+#     wpm: int
+
+#     @validator('wpm')
+#     def wpm_in_range(cls, v):
+#         if not 1 < v < 3000:
+#             raise ValueError('must be an integer between 0 and 3000')
+#         return v
+
+
+# def readConfig(configData:ConfigParser) -> dict:
+
+#     if path.exists(configPath):
+#     return
+
+
+# def saveConfig(configPath:str) -> dict:
+#     return
 
 
 def CalculateDelayFromWPM(wpm: int) -> float:
@@ -17,28 +43,45 @@ def CalculateDelayFromWPM(wpm: int) -> float:
 
 
 async def windowRead(window: gui.Window):
-    global CLOSE, PARAGRAPH_INDEX, WORDS, WORDS_LENGTH, WORD_INDEX
+    global CLOSE, PARAGRAPH_INDEX, WORDS, WORDS_LENGTH, WORD_INDEX, SMW_CONFIG, WPM
     while True:
         await asyncio.sleep(0.01)
         event, values = window.read(0)
-        if event != "__TIMEOUT__":
-            print(f"event: {event}, {values}")
+        if event == "__TIMEOUT__":
+            continue
         if event == "Close" or event == gui.WIN_CLOSED:
             PLAY.set()
             break
         if event == "playPauseButton":
             playPause(window)
         if event == "pasteButton":
-            WORDS, WORDS_LENGTH = textClean(clipboard.paste())
-            WORD_INDEX = 0
-            PARAGRAPH_INDEX = 0
-            playPause(window, forcePlay=True)
+            try:
+                text = clipboard.paste()
+                if not text:
+                    text = "Clipboard does not contain text"
+                SMW_CONFIG["settings"]["text"] = str(text)
+                with open(CONFIG_PATH, "w") as f:
+                    SMW_CONFIG.write(f)
+                WORDS, WORDS_LENGTH = textClean(text)
+                WORD_INDEX = 0
+                PARAGRAPH_INDEX = 0
+                playPause(window, forcePlay=True)
+            except Exception as e:
+                text = f"Error processing pasted material: {e}"
         if event == "cursorBeginning":
-            PARAGRAPH_INDEX = 0
+            if WORD_INDEX == 0:
+                PARAGRAPH_INDEX -= 1
+                PARAGRAPH_INDEX = PARAGRAPH_INDEX if PARAGRAPH_INDEX > 0 else 0
             WORD_INDEX = 0
         if event == "cursorEnd":
-            PARAGRAPH_INDEX = len(WORDS) - 1
-            WORD_INDEX = len(WORDS[PARAGRAPH_INDEX]) - 1
+            if WORD_INDEX == len(WORDS[PARAGRAPH_INDEX]) - 1 or WORD_INDEX == 0:
+                PARAGRAPH_INDEX += 1
+                WORD_INDEX = 0
+                if PARAGRAPH_INDEX > len(WORDS) - 1:
+                    PARAGRAPH_INDEX = len(WORDS) - 1
+                    WORD_INDEX = len(WORDS[PARAGRAPH_INDEX]) - 1
+            else:
+                WORD_INDEX = len(WORDS[PARAGRAPH_INDEX]) - 1
         if event == "cursorPrevious":
             targetIndex = WORD_INDEX - 1
             if targetIndex < 0:
@@ -60,13 +103,23 @@ async def windowRead(window: gui.Window):
         if event.startswith("cursor"):
             playPause(window, forcePause=True)
             updateWord(window)
+        if event == "wpmAdd":
+            WPM += 20
+        if event == "wpmSubtract":
+            WPM -= 20
+        if event.startswith("wpm"):
+            window["wpm"].update(f"{WPM} wpm")
+            SMW_CONFIG["settings"]["wpm"] = str(WPM)
+            with open(CONFIG_PATH, "w") as f:
+                SMW_CONFIG.write(f)
 
     CLOSE = True
     window.close()
     return
 
+
 async def wordHandler(window: gui.Window) -> None:
-    global PARAGRAPH_INDEX, WORDS, WORDS_LENGTH, WORD_INDEX
+    global PARAGRAPH_INDEX, WORDS, WORDS_LENGTH, WORD_INDEX, WPM
     while True:
         if CLOSE:
             break
@@ -90,8 +143,8 @@ async def wordHandler(window: gui.Window) -> None:
 
 
 def updateWord(window: gui.Window) -> None:
-    global PARAGRAPH_INDEX, WORDS, WORDS_LENGTH, WORD_INDEX
-    wordsUp = 16
+    global PARAGRAPH_INDEX, WORDS, WORDS_LENGTH, WORD_INDEX, WPM
+    wordsUp = 14
     halfUp = int(wordsUp / 2)
     words = WORDS[PARAGRAPH_INDEX]
     word = words[WORD_INDEX]
@@ -101,13 +154,13 @@ def updateWord(window: gui.Window) -> None:
         preIndex = None
         postIndex = (wordsUp - WORD_INDEX) + WORD_INDEX
     elif postIndex > len(words) - 1:
-        preIndex = wordsUp - (len(words) - 1) - WORD_INDEX
+        preIndex = WORD_INDEX - (wordsUp - ((len(words) - 1) - WORD_INDEX))
         preIndex = preIndex if preIndex > 0 else 0
         postIndex = None
     window["-OUTPUT-"].update(word)
     window["wordStreamPre"].update(" ".join(words[preIndex:WORD_INDEX]))
     window["wordStreamCurrent"].update(word)
-    window["wordStreamPost"].update(" ".join(words[WORD_INDEX + 1:postIndex]))
+    window["wordStreamPost"].update(" ".join(words[WORD_INDEX + 1 : postIndex]))
     window.refresh()
 
 
@@ -144,10 +197,36 @@ def playPause(window: gui.Window, forcePlay=False, forcePause=False):
 
 def textClean(text: str):
     words = [words.split() for words in text.splitlines()]
+    words = [paragraph for paragraph in words if paragraph]
     return words, len(words)
 
 
 if __name__ == "__main__":
+    if path.exists(CONFIG_PATH):
+        SMW_CONFIG.read(CONFIG_PATH)
+        saveConfig = False
+        if "settings" not in SMW_CONFIG:
+            SMW_CONFIG.add_section("settings")
+            saveConfig = True
+        if "wpm" not in SMW_CONFIG["settings"]:
+            SMW_CONFIG.set("settings", "wpm", str(WPM))
+            saveConfig = True
+        if "text" not in SMW_CONFIG["settings"]:
+            SMW_CONFIG.set("settings", "text", "")
+            saveConfig = True
+        if saveConfig:
+            with open(CONFIG_PATH, "w") as f:
+                SMW_CONFIG.write(f)
+    else:
+        SMW_CONFIG.add_section("settings")
+        SMW_CONFIG.set("settings", "wpm", str(WPM))
+        SMW_CONFIG.set("settings", "text", "")
+        with open(CONFIG_PATH, "w") as f:
+            SMW_CONFIG.write(f)
+
+    WPM = int(SMW_CONFIG["settings"]["wpm"]) or WPM
+    text = SMW_CONFIG["settings"]["text"] or ""
+
     layout = [
         [gui.Text("Ready?", font=("Any", 64, "bold"), key="-OUTPUT-")],
         [
@@ -165,27 +244,37 @@ if __name__ == "__main__":
         ],
         [
             gui.Button("Paste", key="pasteButton"),
-            gui.Button("Close"),
-        ],
-        [
+            gui.Text(" " * 80),
             gui.Button("|<", key="cursorBeginning"),
             gui.Button("<", key="cursorPrevious"),
             gui.Button("Play", key="playPauseButton"),
             gui.Button(">", key="cursorNext"),
             gui.Button(">|", key="cursorEnd"),
+            gui.Text(" " * 60),
+            gui.Button("-", key="wpmSubtract"),
+            gui.Text(f"{WPM} wpm", key="wpm", font=("Any", 12)),
+            gui.Button("+", key="wpmAdd"),
         ],
     ]
-    window = gui.Window(title="So Many Words", layout=layout, finalize=True)
+    icon = base64.b64encode(open(r'./icon.png', 'rb').read())
+    gui.set_options(icon=icon)
+    window = gui.Window(
+        title="So Many Words", layout=layout, finalize=True, element_justification="c"
+    )
     window.bind("<space>", "playPauseButton")
     window.bind("<Ctrl><v>", "pasteButton")
+    window.bind("<Left>", "cursorPrevious")
+    window.bind("<Shift_L><Left>", "cursorBeginning")
+    window.bind("<Right>", "cursorNext")
+    window.bind("<Shift_L><Right>", "cursorEnd")
+    window.bind("<v>", "pasteButton")
 
-    text = (
-        "This utility will display words to you at the specified words per minute "
-        f"(WPM).\nThis is currently set to {WPM}.\nCopy text to the clipboard and hit "
+
+    text = text or (
+        "This utility will display words to you at the words per minute "
+        f"(WPM) specified below.\nCopy text to the clipboard and hit "
         'the "Paste" button.'
     )
-    clip = clipboard.paste()
-    # text = clip if type(clip) is str else text
-    # WORDS = re.findall(r'\b\w+\b', text)
+
     WORDS, WORDS_LENGTH = textClean(text)
     asyncio.run(main(window))

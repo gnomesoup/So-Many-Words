@@ -1,0 +1,774 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="512"
+   height="512"
+   viewBox="0 0 512 512"
+   version="1.1"
+   id="svg5"
+   sodipodi:docname="icon.svg"
+   inkscape:export-filename="/Users/mpfammatter/So-Many-Words/icon.png"
+   inkscape:export-xdpi="31.779301"
+   inkscape:export-ydpi="31.779301"
+   inkscape:version="1.1.2 (b8e25be8, 2022-02-05)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview7"
+     pagecolor="#505050"
+     bordercolor="#eeeeee"
+     borderopacity="1"
+     inkscape:pageshadow="0"
+     inkscape:pageopacity="0"
+     inkscape:pagecheckerboard="0"
+     inkscape:document-units="px"
+     showgrid="false"
+     inkscape:snap-smooth-nodes="true"
+     showguides="true"
+     inkscape:guide-bbox="true"
+     inkscape:object-paths="true"
+     inkscape:snap-object-midpoints="true"
+     inkscape:zoom="0.46379142"
+     inkscape:cx="-119.66586"
+     inkscape:cy="-128.29043"
+     inkscape:window-width="2376"
+     inkscape:window-height="1081"
+     inkscape:window-x="1639"
+     inkscape:window-y="25"
+     inkscape:window-maximized="0"
+     inkscape:current-layer="layer1">
+    <sodipodi:guide
+       position="102.4,341.33331"
+       orientation="1,0"
+       id="guide13535" />
+    <sodipodi:guide
+       position="102.4,341.33331"
+       orientation="0,-1"
+       id="guide13537" />
+    <sodipodi:guide
+       position="0,170.66665"
+       orientation="1,0"
+       id="guide13679" />
+    <sodipodi:guide
+       position="102.4,170.66665"
+       orientation="0,-1"
+       id="guide13762" />
+    <sodipodi:guide
+       position="0,512"
+       orientation="0,512"
+       id="guide14909" />
+    <sodipodi:guide
+       position="512,512"
+       orientation="512,0"
+       id="guide14911" />
+    <sodipodi:guide
+       position="512,0"
+       orientation="0,-512"
+       id="guide14913" />
+    <sodipodi:guide
+       position="0,0"
+       orientation="-512,0"
+       id="guide14915" />
+  </sodipodi:namedview>
+  <defs
+     id="defs2">
+    <inkscape:path-effect
+       effect="clone_original"
+       id="path-effect12432"
+       is_visible="true"
+       lpeversion="1"
+       linkeditem=""
+       method="d"
+       attributes=""
+       css_properties=""
+       allow_transforms="true" />
+    <inkscape:path-effect
+       effect="clone_original"
+       id="path-effect11621"
+       is_visible="true"
+       lpeversion="1"
+       linkeditem="#path6393"
+       method="d"
+       attributes=""
+       css_properties=""
+       allow_transforms="true" />
+    <inkscape:path-effect
+       effect="powerstroke"
+       id="path-effect5849"
+       is_visible="true"
+       lpeversion="1"
+       offset_points="0,1"
+       not_jump="false"
+       sort_points="true"
+       interpolator_type="CubicBezierJohan"
+       interpolator_beta="0.2"
+       start_linecap_type="zerowidth"
+       linejoin_type="extrp_arc"
+       miter_limit="4"
+       scale_width="1"
+       end_linecap_type="zerowidth" />
+    <inkscape:path-effect
+       effect="powerstroke"
+       id="path-effect5845"
+       is_visible="true"
+       lpeversion="1"
+       offset_points="0,1"
+       not_jump="false"
+       sort_points="true"
+       interpolator_type="CubicBezierJohan"
+       interpolator_beta="0.2"
+       start_linecap_type="zerowidth"
+       linejoin_type="extrp_arc"
+       miter_limit="4"
+       scale_width="1"
+       end_linecap_type="zerowidth" />
+    <inkscape:path-effect
+       effect="powerstroke"
+       id="path-effect5695"
+       is_visible="true"
+       lpeversion="1"
+       offset_points="0,1"
+       not_jump="false"
+       sort_points="true"
+       interpolator_type="CubicBezierJohan"
+       interpolator_beta="0.2"
+       start_linecap_type="zerowidth"
+       linejoin_type="extrp_arc"
+       miter_limit="4"
+       scale_width="1"
+       end_linecap_type="zerowidth" />
+    <inkscape:path-effect
+       effect="powerstroke"
+       id="path-effect5658"
+       is_visible="true"
+       lpeversion="1"
+       offset_points="0,1"
+       not_jump="false"
+       sort_points="true"
+       interpolator_type="CubicBezierJohan"
+       interpolator_beta="0.2"
+       start_linecap_type="zerowidth"
+       linejoin_type="extrp_arc"
+       miter_limit="4"
+       scale_width="1"
+       end_linecap_type="zerowidth" />
+    <linearGradient
+       inkscape:collect="always"
+       id="linearGradient5127">
+      <stop
+         style="stop-color:#d40000;stop-opacity:1"
+         offset="0"
+         id="stop5123" />
+      <stop
+         style="stop-color:#940000;stop-opacity:1"
+         offset="1"
+         id="stop5125" />
+    </linearGradient>
+    <inkscape:path-effect
+       effect="powerstroke"
+       id="path-effect4244"
+       is_visible="true"
+       lpeversion="1"
+       offset_points="0,1"
+       not_jump="false"
+       sort_points="true"
+       interpolator_type="CubicBezierJohan"
+       interpolator_beta="0.2"
+       start_linecap_type="zerowidth"
+       linejoin_type="extrp_arc"
+       miter_limit="4"
+       scale_width="1"
+       end_linecap_type="zerowidth" />
+    <inkscape:path-effect
+       effect="powerstroke"
+       id="path-effect4240"
+       is_visible="true"
+       lpeversion="1"
+       offset_points="0,1"
+       not_jump="false"
+       sort_points="true"
+       interpolator_type="CubicBezierJohan"
+       interpolator_beta="0.2"
+       start_linecap_type="zerowidth"
+       linejoin_type="extrp_arc"
+       miter_limit="4"
+       scale_width="1"
+       end_linecap_type="zerowidth" />
+    <inkscape:path-effect
+       effect="powerstroke"
+       id="path-effect3949"
+       is_visible="true"
+       lpeversion="1"
+       offset_points="0,1"
+       not_jump="false"
+       sort_points="true"
+       interpolator_type="CubicBezierJohan"
+       interpolator_beta="0.2"
+       start_linecap_type="zerowidth"
+       linejoin_type="extrp_arc"
+       miter_limit="4"
+       scale_width="1"
+       end_linecap_type="zerowidth" />
+    <inkscape:path-effect
+       effect="powerstroke"
+       id="path-effect3678"
+       is_visible="true"
+       lpeversion="1"
+       offset_points="0,18.8679"
+       not_jump="false"
+       sort_points="true"
+       interpolator_type="CubicBezierJohan"
+       interpolator_beta="0.2"
+       start_linecap_type="zerowidth"
+       linejoin_type="extrp_arc"
+       miter_limit="4"
+       scale_width="1"
+       end_linecap_type="zerowidth" />
+    <linearGradient
+       inkscape:collect="always"
+       id="linearGradient2236">
+      <stop
+         style="stop-color:#ffffff;stop-opacity:1;"
+         offset="0"
+         id="stop2232" />
+      <stop
+         style="stop-color:#b1b1b1;stop-opacity:1"
+         offset="1"
+         id="stop2234" />
+    </linearGradient>
+    <linearGradient
+       inkscape:collect="always"
+       id="linearGradient954">
+      <stop
+         style="stop-color:#8898aa;stop-opacity:1"
+         offset="0"
+         id="stop950" />
+      <stop
+         style="stop-color:#515f70;stop-opacity:1"
+         offset="1"
+         id="stop952" />
+    </linearGradient>
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient954"
+       id="linearGradient956"
+       x1="0"
+       y1="0"
+       x2="512"
+       y2="512"
+       gradientUnits="userSpaceOnUse" />
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient2236"
+       id="linearGradient2924"
+       gradientUnits="userSpaceOnUse"
+       x1="128.01537"
+       y1="264.96207"
+       x2="179.61847"
+       y2="315.57278"
+       gradientTransform="translate(-138.1059,-104.14572)" />
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient5127"
+       id="linearGradient4780"
+       gradientUnits="userSpaceOnUse"
+       gradientTransform="translate(169.09412,-104.14573)"
+       x1="128.01537"
+       y1="264.96207"
+       x2="179.61847"
+       y2="315.57278" />
+    <inkscape:path-effect
+       effect="clone_original"
+       id="path-effect12432-5"
+       is_visible="true"
+       lpeversion="1"
+       linkeditem=""
+       method="d"
+       attributes=""
+       css_properties=""
+       allow_transforms="true" />
+    <inkscape:path-effect
+       effect="clone_original"
+       id="path-effect12455"
+       is_visible="true"
+       lpeversion="1"
+       linkeditem=""
+       method="d"
+       attributes=""
+       css_properties=""
+       allow_transforms="true" />
+    <inkscape:path-effect
+       effect="clone_original"
+       id="path-effect12432-4"
+       is_visible="true"
+       lpeversion="1"
+       linkeditem=""
+       method="d"
+       attributes=""
+       css_properties=""
+       allow_transforms="true" />
+    <inkscape:path-effect
+       effect="clone_original"
+       id="path-effect12455-1"
+       is_visible="true"
+       lpeversion="1"
+       linkeditem=""
+       method="d"
+       attributes=""
+       css_properties=""
+       allow_transforms="true" />
+    <inkscape:path-effect
+       effect="clone_original"
+       id="path-effect12432-44"
+       is_visible="true"
+       lpeversion="1"
+       linkeditem=""
+       method="d"
+       attributes=""
+       css_properties=""
+       allow_transforms="true" />
+    <inkscape:path-effect
+       effect="clone_original"
+       id="path-effect12455-5"
+       is_visible="true"
+       lpeversion="1"
+       linkeditem=""
+       method="d"
+       attributes=""
+       css_properties=""
+       allow_transforms="true" />
+    <inkscape:path-effect
+       effect="clone_original"
+       id="path-effect12432-3"
+       is_visible="true"
+       lpeversion="1"
+       linkeditem=""
+       method="d"
+       attributes=""
+       css_properties=""
+       allow_transforms="true" />
+    <inkscape:path-effect
+       effect="clone_original"
+       id="path-effect12584"
+       is_visible="true"
+       lpeversion="1"
+       linkeditem=""
+       method="d"
+       attributes=""
+       css_properties=""
+       allow_transforms="true" />
+    <inkscape:path-effect
+       effect="clone_original"
+       id="path-effect12432-56"
+       is_visible="true"
+       lpeversion="1"
+       linkeditem=""
+       method="d"
+       attributes=""
+       css_properties=""
+       allow_transforms="true" />
+    <inkscape:path-effect
+       effect="clone_original"
+       id="path-effect12673"
+       is_visible="true"
+       lpeversion="1"
+       linkeditem=""
+       method="d"
+       attributes=""
+       css_properties=""
+       allow_transforms="true" />
+    <inkscape:path-effect
+       effect="clone_original"
+       id="path-effect12432-8"
+       is_visible="true"
+       lpeversion="1"
+       linkeditem=""
+       method="d"
+       attributes=""
+       css_properties=""
+       allow_transforms="true" />
+    <inkscape:path-effect
+       effect="clone_original"
+       id="path-effect12673-9"
+       is_visible="true"
+       lpeversion="1"
+       linkeditem=""
+       method="d"
+       attributes=""
+       css_properties=""
+       allow_transforms="true" />
+    <inkscape:path-effect
+       effect="clone_original"
+       id="path-effect12432-87"
+       is_visible="true"
+       lpeversion="1"
+       linkeditem=""
+       method="d"
+       attributes=""
+       css_properties=""
+       allow_transforms="true" />
+    <inkscape:path-effect
+       effect="clone_original"
+       id="path-effect12673-1"
+       is_visible="true"
+       lpeversion="1"
+       linkeditem=""
+       method="d"
+       attributes=""
+       css_properties=""
+       allow_transforms="true" />
+    <inkscape:path-effect
+       effect="clone_original"
+       id="path-effect12432-1"
+       is_visible="true"
+       lpeversion="1"
+       linkeditem=""
+       method="d"
+       attributes=""
+       css_properties=""
+       allow_transforms="true" />
+    <inkscape:path-effect
+       effect="clone_original"
+       id="path-effect12673-4"
+       is_visible="true"
+       lpeversion="1"
+       linkeditem=""
+       method="d"
+       attributes=""
+       css_properties=""
+       allow_transforms="true" />
+    <inkscape:path-effect
+       effect="clone_original"
+       id="path-effect12432-9"
+       is_visible="true"
+       lpeversion="1"
+       linkeditem=""
+       method="d"
+       attributes=""
+       css_properties=""
+       allow_transforms="true" />
+    <inkscape:path-effect
+       effect="clone_original"
+       id="path-effect12673-3"
+       is_visible="true"
+       lpeversion="1"
+       linkeditem=""
+       method="d"
+       attributes=""
+       css_properties=""
+       allow_transforms="true" />
+    <inkscape:path-effect
+       effect="clone_original"
+       id="path-effect12432-0"
+       is_visible="true"
+       lpeversion="1"
+       linkeditem=""
+       method="d"
+       attributes=""
+       css_properties=""
+       allow_transforms="true" />
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient2236"
+       id="linearGradient13676"
+       gradientUnits="userSpaceOnUse"
+       gradientTransform="translate(-138.1059,-104.1457)"
+       x1="128.01537"
+       y1="264.96207"
+       x2="179.61847"
+       y2="315.57278" />
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient2236"
+       id="linearGradient13815"
+       gradientUnits="userSpaceOnUse"
+       gradientTransform="translate(-138.10589,66.520656)"
+       x1="128.01537"
+       y1="264.96207"
+       x2="179.61847"
+       y2="315.57278" />
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient2236"
+       id="linearGradient13978"
+       gradientUnits="userSpaceOnUse"
+       gradientTransform="translate(373.8941,-104.14572)"
+       x1="128.01537"
+       y1="264.96207"
+       x2="179.61847"
+       y2="315.57278" />
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient2236"
+       id="linearGradient13983"
+       gradientUnits="userSpaceOnUse"
+       gradientTransform="translate(373.8941,66.52095)"
+       x1="128.01537"
+       y1="264.96207"
+       x2="179.61847"
+       y2="315.57278" />
+    <inkscape:path-effect
+       effect="clone_original"
+       id="path-effect12432-2"
+       is_visible="true"
+       lpeversion="1"
+       linkeditem=""
+       method="d"
+       attributes=""
+       css_properties=""
+       allow_transforms="true" />
+    <inkscape:path-effect
+       effect="clone_original"
+       id="path-effect14019"
+       is_visible="true"
+       lpeversion="1"
+       linkeditem=""
+       method="d"
+       attributes=""
+       css_properties=""
+       allow_transforms="true" />
+    <inkscape:path-effect
+       effect="clone_original"
+       id="path-effect14029"
+       is_visible="true"
+       lpeversion="1"
+       linkeditem=""
+       method="d"
+       attributes=""
+       css_properties=""
+       allow_transforms="true" />
+    <inkscape:path-effect
+       effect="clone_original"
+       id="path-effect14039"
+       is_visible="true"
+       lpeversion="1"
+       linkeditem=""
+       method="d"
+       attributes=""
+       css_properties=""
+       allow_transforms="true" />
+    <inkscape:path-effect
+       effect="clone_original"
+       id="path-effect14049"
+       is_visible="true"
+       lpeversion="1"
+       linkeditem=""
+       method="d"
+       attributes=""
+       css_properties=""
+       allow_transforms="true" />
+    <inkscape:path-effect
+       effect="clone_original"
+       id="path-effect12432-40"
+       is_visible="true"
+       lpeversion="1"
+       linkeditem=""
+       method="d"
+       attributes=""
+       css_properties=""
+       allow_transforms="true" />
+    <inkscape:path-effect
+       effect="clone_original"
+       id="path-effect14374"
+       is_visible="true"
+       lpeversion="1"
+       linkeditem=""
+       method="d"
+       attributes=""
+       css_properties=""
+       allow_transforms="true" />
+    <inkscape:path-effect
+       effect="clone_original"
+       id="path-effect14384"
+       is_visible="true"
+       lpeversion="1"
+       linkeditem=""
+       method="d"
+       attributes=""
+       css_properties=""
+       allow_transforms="true" />
+    <inkscape:path-effect
+       effect="clone_original"
+       id="path-effect14394"
+       is_visible="true"
+       lpeversion="1"
+       linkeditem=""
+       method="d"
+       attributes=""
+       css_properties=""
+       allow_transforms="true" />
+    <inkscape:path-effect
+       effect="clone_original"
+       id="path-effect14404"
+       is_visible="true"
+       lpeversion="1"
+       linkeditem=""
+       method="d"
+       attributes=""
+       css_properties=""
+       allow_transforms="true" />
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient2236"
+       id="linearGradient14604"
+       gradientUnits="userSpaceOnUse"
+       gradientTransform="translate(-138.10589,66.520656)"
+       x1="128.01537"
+       y1="264.96207"
+       x2="179.61847"
+       y2="315.57278" />
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient2236"
+       id="linearGradient14606"
+       gradientUnits="userSpaceOnUse"
+       gradientTransform="translate(373.8941,66.52095)"
+       x1="128.01537"
+       y1="264.96207"
+       x2="179.61847"
+       y2="315.57278" />
+  </defs>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <rect
+       style="fill:url(#linearGradient956);fill-opacity:1"
+       id="rect846"
+       width="512"
+       height="512"
+       x="0"
+       y="0" />
+    <g
+       id="g14923"
+       transform="translate(0,85.333317)">
+      <path
+         id="path1002"
+         style="fill:url(#linearGradient2924)"
+         d="M 43.251399,170.66667 A 43.251396,43.251396 0 0 1 4e-6,213.91807 43.251396,43.251396 0 0 1 -43.251399,170.66667 43.251396,43.251396 0 0 1 4e-6,127.41528 43.251396,43.251396 0 0 1 43.251399,170.66667 Z"
+         transform="translate(102.4,1.5e-5)"
+         inkscape:original-d="M 43.251399,170.66667 A 43.251396,43.251396 0 0 1 4e-6,213.91807 43.251396,43.251396 0 0 1 -43.251399,170.66667 43.251396,43.251396 0 0 1 4e-6,127.41528 43.251396,43.251396 0 0 1 43.251399,170.66667 Z"
+         inkscape:path-effect="#path-effect12432" />
+      <path
+         id="path1002-5"
+         style="fill:url(#linearGradient13676)"
+         d="m 0,127.41602 v 86.50195 A 43.251396,43.251396 0 0 0 43.251953,170.66602 43.251396,43.251396 0 0 0 0,127.41602 Z" />
+      <path
+         id="path1002-1-3"
+         style="fill:url(#linearGradient4780)"
+         d="M 350.4514,170.66667 A 43.251396,43.251396 0 0 1 307.2,213.91807 43.251396,43.251396 0 0 1 263.9486,170.66667 43.251396,43.251396 0 0 1 307.2,127.41528 43.251396,43.251396 0 0 1 350.4514,170.66667 Z" />
+      <use
+         x="0"
+         y="0"
+         xlink:href="#path1002"
+         id="use12434-6"
+         transform="translate(102.4)"
+         width="100%"
+         height="100%" />
+      <use
+         x="0"
+         y="0"
+         xlink:href="#path1002"
+         id="use12434-61"
+         transform="translate(307.20001,-1.0000005e-5)"
+         width="100%"
+         height="100%" />
+      <path
+         id="use12434-9"
+         style="fill:url(#linearGradient13978)"
+         d="m 512,127.41602 a 43.251396,43.251396 0 0 0 -43.25195,43.25 A 43.251396,43.251396 0 0 0 512,213.91797 Z" />
+    </g>
+    <g
+       id="g14339"
+       transform="translate(0,43.25098)">
+      <path
+         id="path1002-5-7"
+         style="fill:url(#linearGradient13815)"
+         d="m 0,298.08237 v 86.50195 A 43.251396,43.251396 0 0 0 43.251953,341.33237 43.251396,43.251396 0 0 0 0,298.08237 Z" />
+      <path
+         id="use12434-9-9"
+         style="fill:url(#linearGradient13983)"
+         d="M 512,298.08203 A 43.251396,43.251396 0 0 0 468.74805,341.33398 43.251396,43.251396 0 0 0 512,384.58398 Z" />
+      <use
+         x="0"
+         y="0"
+         xlink:href="#path1002"
+         id="use12434-9-9-3"
+         transform="translate(204.80001,170.66666)"
+         width="100%"
+         height="100%" />
+      <use
+         x="0"
+         y="0"
+         xlink:href="#path1002"
+         id="use12434-9-9-1"
+         transform="translate(102.40001,170.66667)"
+         width="100%"
+         height="100%" />
+      <use
+         x="0"
+         y="0"
+         xlink:href="#path1002"
+         id="use12434-9-9-9"
+         transform="translate(0,170.66666)"
+         width="100%"
+         height="100%" />
+      <use
+         x="0"
+         y="0"
+         xlink:href="#path1002"
+         id="use12434-9-9-4"
+         transform="translate(307.20001,170.66666)"
+         width="100%"
+         height="100%" />
+    </g>
+    <g
+       id="g14339-5"
+       transform="translate(0,-213.91729)">
+      <path
+         id="path1002-5-7-7"
+         style="fill:url(#linearGradient14604)"
+         d="m 0,298.08237 v 86.50195 A 43.251396,43.251396 0 0 0 43.251953,341.33237 43.251396,43.251396 0 0 0 0,298.08237 Z" />
+      <path
+         id="use12434-9-9-0"
+         style="fill:url(#linearGradient14606)"
+         d="M 512,298.08203 A 43.251396,43.251396 0 0 0 468.74805,341.33398 43.251396,43.251396 0 0 0 512,384.58398 Z" />
+      <use
+         x="0"
+         y="0"
+         xlink:href="#path1002"
+         id="use12434-9-9-3-0"
+         transform="translate(204.80001,170.66666)"
+         width="100%"
+         height="100%" />
+      <use
+         x="0"
+         y="0"
+         xlink:href="#path1002"
+         id="use12434-9-9-1-5"
+         transform="translate(102.40001,170.66667)"
+         width="100%"
+         height="100%" />
+      <use
+         x="0"
+         y="0"
+         xlink:href="#path1002"
+         id="use12434-9-9-9-6"
+         transform="translate(0,170.66666)"
+         width="100%"
+         height="100%" />
+      <use
+         x="0"
+         y="0"
+         xlink:href="#path1002"
+         id="use12434-9-9-4-7"
+         transform="translate(307.20001,170.66666)"
+         width="100%"
+         height="100%" />
+    </g>
+  </g>
+</svg>
