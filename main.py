@@ -1,10 +1,11 @@
 import asyncio
-import clipboard
-import plistlib
-from os import environ, path
 import base64
-
+import clipboard
+from os import environ, path
+import plistlib
 import PySimpleGUI as gui
+import sys
+
 
 PLAY = asyncio.Event()
 CLOSE = False
@@ -18,6 +19,12 @@ CONFIG_PATH = (
 SMW_CONFIG = dict()
 WPM = 240
 
+
+def resourcePath(localPath):
+    if hasattr(sys, "_MEIPASS"):
+        return path.join(sys._MEIPASS, localPath)
+    else:
+        return localPath
 
 def CalculateDelayFromWPM(wpm: int) -> float:
     return 60.0 / float(wpm)
@@ -235,7 +242,8 @@ if __name__ == "__main__":
             gui.Button("+", key="wpmAdd"),
         ],
     ]
-    icon = base64.b64encode(open(r"./icon.png", "rb").read())
+
+    icon = base64.b64encode(open(resourcePath("./icon.png"), "rb").read())
     gui.set_options(icon=icon)
     window = gui.Window(
         title="So Many Words", layout=layout, finalize=True, element_justification="c"
