@@ -12,4 +12,4 @@ mkdir icon.iconset
 iconutil -c icns icon.iconset
 rm -R icon.iconset
 
-pyinstaller --icon icon.icns --windowed --name 'So Many Words' main.py
+pyinstaller --icon icon.icns --windowed --name 'So Many Words' --noconfirm main.py

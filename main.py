@@ -1,11 +1,9 @@
 import asyncio
 import clipboard
 import plistlib
-from configparser import ConfigParser
-from os import path
+from os import environ, path
 import base64
 
-# from pydantic import BaseModel, ValidationError, validator
 import PySimpleGUI as gui
 
 PLAY = asyncio.Event()
@@ -14,28 +12,11 @@ WORDS = []
 WORDS_LENGTH = 0
 WORD_INDEX = 0
 PARAGRAPH_INDEX = 0
-CONFIG_PATH = "./so-many-words.ini"
-SMW_CONFIG = ConfigParser()
+CONFIG_PATH = (
+    f'/Users/{environ.get("USER")}/Library/Preferences/com.mmjo.somanywords.plist'
+)
+SMW_CONFIG = dict()
 WPM = 240
-
-# class SMWConfig(BaseModel):
-#     wpm: int
-
-#     @validator('wpm')
-#     def wpm_in_range(cls, v):
-#         if not 1 < v < 3000:
-#             raise ValueError('must be an integer between 0 and 3000')
-#         return v
-
-
-# def readConfig(configData:ConfigParser) -> dict:
-
-#     if path.exists(configPath):
-#     return
-
-
-# def saveConfig(configPath:str) -> dict:
-#     return
 
 
 def CalculateDelayFromWPM(wpm: int) -> float:
@@ -55,19 +36,20 @@ async def windowRead(window: gui.Window):
         if event == "playPauseButton":
             playPause(window)
         if event == "pasteButton":
+            print("Pasting")
             try:
                 text = clipboard.paste()
+                print(f"{text=}")
                 if not text:
                     text = "Clipboard does not contain text"
-                SMW_CONFIG["settings"]["text"] = str(text)
-                with open(CONFIG_PATH, "w") as f:
-                    SMW_CONFIG.write(f)
-                WORDS, WORDS_LENGTH = textClean(text)
-                WORD_INDEX = 0
-                PARAGRAPH_INDEX = 0
-                playPause(window, forcePlay=True)
+                SMW_CONFIG["text"] = str(text)
             except Exception as e:
                 text = f"Error processing pasted material: {e}"
+                savePlist(CONFIG_PATH, SMW_CONFIG)
+            WORDS, WORDS_LENGTH = textClean(text)
+            WORD_INDEX = 0
+            PARAGRAPH_INDEX = 0
+            playPause(window, forcePlay=True)
         if event == "cursorBeginning":
             if WORD_INDEX == 0:
                 PARAGRAPH_INDEX -= 1
@@ -109,9 +91,8 @@ async def windowRead(window: gui.Window):
             WPM -= 20
         if event.startswith("wpm"):
             window["wpm"].update(f"{WPM} wpm")
-            SMW_CONFIG["settings"]["wpm"] = str(WPM)
-            with open(CONFIG_PATH, "w") as f:
-                SMW_CONFIG.write(f)
+            SMW_CONFIG["wpm"] = WPM
+            savePlist(CONFIG_PATH, SMW_CONFIG)
 
     CLOSE = True
     window.close()
@@ -200,32 +181,30 @@ def textClean(text: str):
     words = [paragraph for paragraph in words if paragraph]
     return words, len(words)
 
+def savePlist(path:str, config:dict) -> None:
+    with open(CONFIG_PATH, "wb") as f:
+        plistlib.dump(value=config, fp=f)
+
 
 if __name__ == "__main__":
     if path.exists(CONFIG_PATH):
-        SMW_CONFIG.read(CONFIG_PATH)
+        with open(CONFIG_PATH, "rb") as f:
+            SMW_CONFIG = plistlib.load(f)
         saveConfig = False
-        if "settings" not in SMW_CONFIG:
-            SMW_CONFIG.add_section("settings")
+        if "wpm" not in SMW_CONFIG:
+            SMW_CONFIG["wpm"] = WPM
             saveConfig = True
-        if "wpm" not in SMW_CONFIG["settings"]:
-            SMW_CONFIG.set("settings", "wpm", str(WPM))
-            saveConfig = True
-        if "text" not in SMW_CONFIG["settings"]:
-            SMW_CONFIG.set("settings", "text", "")
+        if "text" not in SMW_CONFIG:
+            SMW_CONFIG["text"] = ""
             saveConfig = True
         if saveConfig:
-            with open(CONFIG_PATH, "w") as f:
-                SMW_CONFIG.write(f)
+            savePlist(CONFIG_PATH, SMW_CONFIG)
     else:
-        SMW_CONFIG.add_section("settings")
-        SMW_CONFIG.set("settings", "wpm", str(WPM))
-        SMW_CONFIG.set("settings", "text", "")
-        with open(CONFIG_PATH, "w") as f:
-            SMW_CONFIG.write(f)
+        SMW_CONFIG = dict(wpm=WPM, text="")
+        savePlist(CONFIG_PATH, SMW_CONFIG)
 
-    WPM = int(SMW_CONFIG["settings"]["wpm"]) or WPM
-    text = SMW_CONFIG["settings"]["text"] or ""
+    WPM = int(SMW_CONFIG["wpm"]) or WPM
+    text = SMW_CONFIG["text"] or ""
 
     layout = [
         [gui.Text("Ready?", font=("Any", 64, "bold"), key="-OUTPUT-")],
@@ -256,7 +235,7 @@ if __name__ == "__main__":
             gui.Button("+", key="wpmAdd"),
         ],
     ]
-    icon = base64.b64encode(open(r'./icon.png', 'rb').read())
+    icon = base64.b64encode(open(r"./icon.png", "rb").read())
     gui.set_options(icon=icon)
     window = gui.Window(
         title="So Many Words", layout=layout, finalize=True, element_justification="c"
@@ -268,7 +247,6 @@ if __name__ == "__main__":
     window.bind("<Right>", "cursorNext")
     window.bind("<Shift_L><Right>", "cursorEnd")
     window.bind("<v>", "pasteButton")
-
 
     text = text or (
         "This utility will display words to you at the words per minute "
