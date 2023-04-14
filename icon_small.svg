@@ -7,7 +7,7 @@
    viewBox="0 0 512 512"
    version="1.1"
    id="svg5"
-   sodipodi:docname="icon.svg"
+   sodipodi:docname="icon_small.svg"
    inkscape:export-filename="/Users/mpfammatter/So-Many-Words/icon.png"
    inkscape:export-xdpi="31.779301"
    inkscape:export-ydpi="31.779301"
@@ -33,14 +33,47 @@
      inkscape:object-paths="true"
      inkscape:snap-object-midpoints="true"
      inkscape:zoom="0.46379142"
-     inkscape:cx="-180.03783"
+     inkscape:cx="-146.61763"
      inkscape:cy="-128.29043"
      inkscape:window-width="2376"
      inkscape:window-height="1081"
      inkscape:window-x="1639"
      inkscape:window-y="25"
      inkscape:window-maximized="0"
-     inkscape:current-layer="layer1" />
+     inkscape:current-layer="layer1">
+    <sodipodi:guide
+       position="102.4,341.33331"
+       orientation="1,0"
+       id="guide13535" />
+    <sodipodi:guide
+       position="102.4,341.33331"
+       orientation="0,-1"
+       id="guide13537" />
+    <sodipodi:guide
+       position="0,170.66665"
+       orientation="1,0"
+       id="guide13679" />
+    <sodipodi:guide
+       position="102.4,170.66665"
+       orientation="0,-1"
+       id="guide13762" />
+    <sodipodi:guide
+       position="0,512"
+       orientation="0,512"
+       id="guide14909" />
+    <sodipodi:guide
+       position="512,512"
+       orientation="512,0"
+       id="guide14911" />
+    <sodipodi:guide
+       position="512,0"
+       orientation="0,-512"
+       id="guide14913" />
+    <sodipodi:guide
+       position="0,0"
+       orientation="-512,0"
+       id="guide14915" />
+  </sodipodi:namedview>
   <defs
      id="defs2">
     <inkscape:path-effect
@@ -227,8 +260,7 @@
        y1="0"
        x2="512"
        y2="512"
-       gradientUnits="userSpaceOnUse"
-       gradientTransform="matrix(0.83333333,0,0,0.83333333,17.066667,20.84641)" />
+       gradientUnits="userSpaceOnUse" />
     <linearGradient
        inkscape:collect="always"
        xlink:href="#linearGradient2236"
@@ -604,140 +636,136 @@
      inkscape:label="Layer 1"
      inkscape:groupmode="layer"
      id="layer1">
+    <path
+       id="rect846"
+       style="fill:url(#linearGradient956);fill-opacity:1"
+       d="M 85.333984 0 C 38.059337 0 0 38.059337 0 85.333984 L 0 426.66602 C 0 473.94066 38.059337 512 85.333984 512 L 426.66602 512 C 473.94066 512 512 473.94066 512 426.66602 L 512 85.333984 C 512 38.059337 473.94066 0 426.66602 0 L 85.333984 0 z " />
     <g
-       id="g1515"
-       transform="translate(25.599997,21.820255)">
+       id="g14923"
+       transform="translate(0,85.333317)">
       <path
-         id="rect846"
-         style="fill:url(#linearGradient956);fill-opacity:1;stroke-width:0.833333"
-         d="m 88.17832,20.84641 c -39.395539,0 -71.111653,31.716114 -71.111653,71.111653 V 376.40143 c 0,39.39553 31.716114,71.11165 71.111653,71.11165 h 284.44337 c 39.39553,0 71.11165,-31.71612 71.11165,-71.11165 V 91.958063 c 0,-39.395539 -31.71612,-71.111653 -71.11165,-71.111653 z" />
-      <g
-         id="g14923"
-         transform="matrix(0.83333333,0,0,0.83333333,17.066667,91.957507)">
-        <path
-           id="path1002"
-           style="fill:url(#linearGradient2924)"
-           d="M 43.251399,170.66667 A 43.251396,43.251396 0 0 1 4e-6,213.91807 43.251396,43.251396 0 0 1 -43.251399,170.66667 43.251396,43.251396 0 0 1 4e-6,127.41528 43.251396,43.251396 0 0 1 43.251399,170.66667 Z"
-           transform="translate(102.4,1.5e-5)"
-           inkscape:original-d="M 43.251399,170.66667 A 43.251396,43.251396 0 0 1 4e-6,213.91807 43.251396,43.251396 0 0 1 -43.251399,170.66667 43.251396,43.251396 0 0 1 4e-6,127.41528 43.251396,43.251396 0 0 1 43.251399,170.66667 Z"
-           inkscape:path-effect="#path-effect12432" />
-        <path
-           id="path1002-5"
-           style="fill:url(#linearGradient13676)"
-           d="m 0,127.41602 v 86.50195 A 43.251396,43.251396 0 0 0 43.251953,170.66602 43.251396,43.251396 0 0 0 0,127.41602 Z" />
-        <path
-           id="path1002-1-3"
-           style="fill:url(#linearGradient4780)"
-           d="M 350.4514,170.66667 A 43.251396,43.251396 0 0 1 307.2,213.91807 43.251396,43.251396 0 0 1 263.9486,170.66667 43.251396,43.251396 0 0 1 307.2,127.41528 43.251396,43.251396 0 0 1 350.4514,170.66667 Z" />
-        <use
-           x="0"
-           y="0"
-           xlink:href="#path1002"
-           id="use12434-6"
-           transform="translate(102.4)"
-           width="100%"
-           height="100%" />
-        <use
-           x="0"
-           y="0"
-           xlink:href="#path1002"
-           id="use12434-61"
-           transform="translate(307.20001,-1.0000005e-5)"
-           width="100%"
-           height="100%" />
-        <path
-           id="use12434-9"
-           style="fill:url(#linearGradient13978)"
-           d="m 512,127.41602 a 43.251396,43.251396 0 0 0 -43.25195,43.25 A 43.251396,43.251396 0 0 0 512,213.91797 Z" />
-      </g>
-      <g
-         id="g14339"
-         transform="matrix(0.83333333,0,0,0.83333333,17.066667,56.888893)">
-        <path
-           id="path1002-5-7"
-           style="fill:url(#linearGradient13815)"
-           d="m 0,298.08237 v 86.50195 A 43.251396,43.251396 0 0 0 43.251953,341.33237 43.251396,43.251396 0 0 0 0,298.08237 Z" />
-        <path
-           id="use12434-9-9"
-           style="fill:url(#linearGradient13983)"
-           d="M 512,298.08203 A 43.251396,43.251396 0 0 0 468.74805,341.33398 43.251396,43.251396 0 0 0 512,384.58398 Z" />
-        <use
-           x="0"
-           y="0"
-           xlink:href="#path1002"
-           id="use12434-9-9-3"
-           transform="translate(204.80001,170.66666)"
-           width="100%"
-           height="100%" />
-        <use
-           x="0"
-           y="0"
-           xlink:href="#path1002"
-           id="use12434-9-9-1"
-           transform="translate(102.40001,170.66667)"
-           width="100%"
-           height="100%" />
-        <use
-           x="0"
-           y="0"
-           xlink:href="#path1002"
-           id="use12434-9-9-9"
-           transform="translate(0,170.66666)"
-           width="100%"
-           height="100%" />
-        <use
-           x="0"
-           y="0"
-           xlink:href="#path1002"
-           id="use12434-9-9-4"
-           transform="translate(307.20001,170.66666)"
-           width="100%"
-           height="100%" />
-      </g>
-      <g
-         id="g14339-5"
-         transform="matrix(0.83333333,0,0,0.83333333,17.066667,-157.418)">
-        <path
-           id="path1002-5-7-7"
-           style="fill:url(#linearGradient14604)"
-           d="m 0,298.08237 v 86.50195 A 43.251396,43.251396 0 0 0 43.251953,341.33237 43.251396,43.251396 0 0 0 0,298.08237 Z" />
-        <path
-           id="use12434-9-9-0"
-           style="fill:url(#linearGradient14606)"
-           d="M 512,298.08203 A 43.251396,43.251396 0 0 0 468.74805,341.33398 43.251396,43.251396 0 0 0 512,384.58398 Z" />
-        <use
-           x="0"
-           y="0"
-           xlink:href="#path1002"
-           id="use12434-9-9-3-0"
-           transform="translate(204.80001,170.66666)"
-           width="100%"
-           height="100%" />
-        <use
-           x="0"
-           y="0"
-           xlink:href="#path1002"
-           id="use12434-9-9-1-5"
-           transform="translate(102.40001,170.66667)"
-           width="100%"
-           height="100%" />
-        <use
-           x="0"
-           y="0"
-           xlink:href="#path1002"
-           id="use12434-9-9-9-6"
-           transform="translate(0,170.66666)"
-           width="100%"
-           height="100%" />
-        <use
-           x="0"
-           y="0"
-           xlink:href="#path1002"
-           id="use12434-9-9-4-7"
-           transform="translate(307.20001,170.66666)"
-           width="100%"
-           height="100%" />
-      </g>
+         id="path1002"
+         style="fill:url(#linearGradient2924)"
+         d="M 43.251399,170.66667 A 43.251396,43.251396 0 0 1 4e-6,213.91807 43.251396,43.251396 0 0 1 -43.251399,170.66667 43.251396,43.251396 0 0 1 4e-6,127.41528 43.251396,43.251396 0 0 1 43.251399,170.66667 Z"
+         transform="translate(102.4,1.5e-5)"
+         inkscape:original-d="M 43.251399,170.66667 A 43.251396,43.251396 0 0 1 4e-6,213.91807 43.251396,43.251396 0 0 1 -43.251399,170.66667 43.251396,43.251396 0 0 1 4e-6,127.41528 43.251396,43.251396 0 0 1 43.251399,170.66667 Z"
+         inkscape:path-effect="#path-effect12432" />
+      <path
+         id="path1002-5"
+         style="fill:url(#linearGradient13676)"
+         d="m 0,127.41602 v 86.50195 A 43.251396,43.251396 0 0 0 43.251953,170.66602 43.251396,43.251396 0 0 0 0,127.41602 Z" />
+      <path
+         id="path1002-1-3"
+         style="fill:url(#linearGradient4780)"
+         d="M 350.4514,170.66667 A 43.251396,43.251396 0 0 1 307.2,213.91807 43.251396,43.251396 0 0 1 263.9486,170.66667 43.251396,43.251396 0 0 1 307.2,127.41528 43.251396,43.251396 0 0 1 350.4514,170.66667 Z" />
+      <use
+         x="0"
+         y="0"
+         xlink:href="#path1002"
+         id="use12434-6"
+         transform="translate(102.4)"
+         width="100%"
+         height="100%" />
+      <use
+         x="0"
+         y="0"
+         xlink:href="#path1002"
+         id="use12434-61"
+         transform="translate(307.20001,-1.0000005e-5)"
+         width="100%"
+         height="100%" />
+      <path
+         id="use12434-9"
+         style="fill:url(#linearGradient13978)"
+         d="m 512,127.41602 a 43.251396,43.251396 0 0 0 -43.25195,43.25 A 43.251396,43.251396 0 0 0 512,213.91797 Z" />
+    </g>
+    <g
+       id="g14339"
+       transform="translate(0,43.25098)">
+      <path
+         id="path1002-5-7"
+         style="fill:url(#linearGradient13815)"
+         d="m 0,298.08237 v 86.50195 A 43.251396,43.251396 0 0 0 43.251953,341.33237 43.251396,43.251396 0 0 0 0,298.08237 Z" />
+      <path
+         id="use12434-9-9"
+         style="fill:url(#linearGradient13983)"
+         d="M 512,298.08203 A 43.251396,43.251396 0 0 0 468.74805,341.33398 43.251396,43.251396 0 0 0 512,384.58398 Z" />
+      <use
+         x="0"
+         y="0"
+         xlink:href="#path1002"
+         id="use12434-9-9-3"
+         transform="translate(204.80001,170.66666)"
+         width="100%"
+         height="100%" />
+      <use
+         x="0"
+         y="0"
+         xlink:href="#path1002"
+         id="use12434-9-9-1"
+         transform="translate(102.40001,170.66667)"
+         width="100%"
+         height="100%" />
+      <use
+         x="0"
+         y="0"
+         xlink:href="#path1002"
+         id="use12434-9-9-9"
+         transform="translate(0,170.66666)"
+         width="100%"
+         height="100%" />
+      <use
+         x="0"
+         y="0"
+         xlink:href="#path1002"
+         id="use12434-9-9-4"
+         transform="translate(307.20001,170.66666)"
+         width="100%"
+         height="100%" />
+    </g>
+    <g
+       id="g14339-5"
+       transform="translate(0,-213.91729)">
+      <path
+         id="path1002-5-7-7"
+         style="fill:url(#linearGradient14604)"
+         d="m 0,298.08237 v 86.50195 A 43.251396,43.251396 0 0 0 43.251953,341.33237 43.251396,43.251396 0 0 0 0,298.08237 Z" />
+      <path
+         id="use12434-9-9-0"
+         style="fill:url(#linearGradient14606)"
+         d="M 512,298.08203 A 43.251396,43.251396 0 0 0 468.74805,341.33398 43.251396,43.251396 0 0 0 512,384.58398 Z" />
+      <use
+         x="0"
+         y="0"
+         xlink:href="#path1002"
+         id="use12434-9-9-3-0"
+         transform="translate(204.80001,170.66666)"
+         width="100%"
+         height="100%" />
+      <use
+         x="0"
+         y="0"
+         xlink:href="#path1002"
+         id="use12434-9-9-1-5"
+         transform="translate(102.40001,170.66667)"
+         width="100%"
+         height="100%" />
+      <use
+         x="0"
+         y="0"
+         xlink:href="#path1002"
+         id="use12434-9-9-9-6"
+         transform="translate(0,170.66666)"
+         width="100%"
+         height="100%" />
+      <use
+         x="0"
+         y="0"
+         xlink:href="#path1002"
+         id="use12434-9-9-4-7"
+         transform="translate(307.20001,170.66666)"
+         width="100%"
+         height="100%" />
     </g>
   </g>
 </svg>
