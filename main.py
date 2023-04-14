@@ -3,6 +3,7 @@ import base64
 import clipboard
 from os import environ, path
 import plistlib
+from pypdf import PdfReader
 import PySimpleGUI as gui
 import sys
 
@@ -26,33 +27,58 @@ def resourcePath(localPath):
     else:
         return localPath
 
+
 def CalculateDelayFromWPM(wpm: int) -> float:
     return 60.0 / float(wpm)
+
+def readPDF(fileName):
+    try:
+        reader = PdfReader(fileName)
+        if reader.is_encrypted:
+            return "PDF is encrypted"
+        text = ""
+        for page in reader.pages:
+            text = text + page.extract_text()
+    except Exception as e:
+        return f"Error reading PDF: {e}"
+    return text
 
 
 async def windowRead(window: gui.Window):
     global CLOSE, PARAGRAPH_INDEX, WORDS, WORDS_LENGTH, WORD_INDEX, SMW_CONFIG, WPM
     while True:
         await asyncio.sleep(0.01)
+        if window['-browse-'].get():
+            fileName = window['-browse-'].get()
+            if not fileName.lower().endswith(".pdf"):
+                gui.popup("Only PDF files are accepted.")
+            else:
+                text = readPDF(fileName)
+                WORDS, WORDS_LENGTH = textClean(text)
+                WORD_INDEX = 0
+                PARAGRAPH_INDEX = 0
+            playPause(window, forcePlay=True)
+            savePlist(CONFIG_PATH, SMW_CONFIG)
+            window['-browse-'].update("")
+            window.refresh()
         event, values = window.read(0)
         if event == "__TIMEOUT__":
             continue
+        # print(f"{event=}")
         if event == "Close" or event == gui.WIN_CLOSED:
             PLAY.set()
             break
         if event == "playPauseButton":
             playPause(window)
         if event == "pasteButton":
-            print("Pasting")
             try:
                 text = clipboard.paste()
-                print(f"{text=}")
                 if not text:
                     text = "Clipboard does not contain text"
                 SMW_CONFIG["text"] = str(text)
             except Exception as e:
                 text = f"Error processing pasted material: {e}"
-                savePlist(CONFIG_PATH, SMW_CONFIG)
+            savePlist(CONFIG_PATH, SMW_CONFIG)
             WORDS, WORDS_LENGTH = textClean(text)
             WORD_INDEX = 0
             PARAGRAPH_INDEX = 0
@@ -123,7 +149,7 @@ async def wordHandler(window: gui.Window) -> None:
                 PARAGRAPH_INDEX = 0
                 WORD_INDEX = 0
                 playPause(window, forcePause=True)
-            else:
+            elif words[-1].endswith(".") or words[-1].endswith("\n"):
                 await wordAdvance(WPM)
         if CLOSE:
             break
@@ -188,7 +214,8 @@ def textClean(text: str):
     words = [paragraph for paragraph in words if paragraph]
     return words, len(words)
 
-def savePlist(path:str, config:dict) -> None:
+
+def savePlist(path: str, config: dict) -> None:
     with open(CONFIG_PATH, "wb") as f:
         plistlib.dump(value=config, fp=f)
 
@@ -230,7 +257,9 @@ if __name__ == "__main__":
         ],
         [
             gui.Button("Paste", key="pasteButton"),
-            gui.Text(" " * 80),
+            gui.FileBrowse(target="-browse-", file_types=(("PDF Files", "*.txt"),)),
+            gui.Input(key="-browse-", visible=False),
+            gui.Text(" " * 60),
             gui.Button("|<", key="cursorBeginning"),
             gui.Button("<", key="cursorPrevious"),
             gui.Button("Play", key="playPauseButton"),
