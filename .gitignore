@@ -131,3 +131,5 @@ dmypy.json
 .vscode
 *.code-workspace
 .DS_Store
+*.dmg
+*.icns

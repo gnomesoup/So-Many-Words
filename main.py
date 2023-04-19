@@ -1,12 +1,14 @@
+#-*- coding: utf-8 -*-
 import asyncio
 import base64
-import clipboard
+from AppKit import NSPasteboard, NSStringPboardType
+from codecs import encode
 from os import environ, path
 import plistlib
 from pypdf import PdfReader
 import PySimpleGUI as gui
+from subprocess import Popen, PIPE
 import sys
-
 
 PLAY = asyncio.Event()
 CLOSE = False
@@ -19,7 +21,6 @@ CONFIG_PATH = (
 )
 SMW_CONFIG = dict()
 WPM = 240
-
 
 def resourcePath(localPath):
     if hasattr(sys, "_MEIPASS"):
@@ -41,6 +42,8 @@ def readPDF(fileName):
             text = text + page.extract_text()
     except Exception as e:
         return f"Error reading PDF: {e}"
+    if not text:
+        return "No text was extracted from the PDF file"
     return text
 
 
@@ -72,7 +75,7 @@ async def windowRead(window: gui.Window):
             playPause(window)
         if event == "pasteButton":
             try:
-                text = clipboard.paste()
+                text = macClipboardPaste()
                 if not text:
                     text = "Clipboard does not contain text"
                 SMW_CONFIG["text"] = str(text)
@@ -219,6 +222,20 @@ def savePlist(path: str, config: dict) -> None:
     with open(CONFIG_PATH, "wb") as f:
         plistlib.dump(value=config, fp=f)
 
+def macClipboardPaste():
+    pb = NSPasteboard.generalPasteboard()
+    pbType = pb.availableTypeFromArray_([NSStringPboardType])
+    if pbType:
+        clipString = pb.stringForType_(pbType)
+        if clipString:
+            return clipString
+        else:
+            return ""
+    # p = Popen(["pbpaste", "-P RTL"], stdout=PIPE)
+    # p.wait()
+    # data = p.stdout.read()
+    # data = data.decode(encoding='utf-8', errors="replace")
+    return
 
 if __name__ == "__main__":
     if path.exists(CONFIG_PATH):

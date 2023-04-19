@@ -16,4 +16,4 @@ rm -R icon.iconset
 
 pyinstaller --icon icon.icns --windowed --onefile --name 'So Many Words' --noconfirm --add-data "./icon.png:." main.py
 rm -Rf "./dist/So Many Words"
-hdiutil create -srcfolder dist "So Many Words v2023.03.0.dmg"
+hdiutil create -srcfolder dist "So Many Words v2023.04.0.dmg"
