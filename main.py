@@ -1,4 +1,4 @@
-#-*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 import asyncio
 import base64
 from AppKit import NSPasteboard, NSStringPboardType
@@ -7,6 +7,7 @@ from os import environ, path
 import plistlib
 from pypdf import PdfReader
 import PySimpleGUI as gui
+import re
 from subprocess import Popen, PIPE
 import sys
 
@@ -15,12 +16,14 @@ CLOSE = False
 WORDS = []
 WORDS_LENGTH = 0
 WORD_INDEX = 0
+WORD_SUB_INDEX = 0
 PARAGRAPH_INDEX = 0
 CONFIG_PATH = (
     f'/Users/{environ.get("USER")}/Library/Preferences/com.mmjo.somanywords.plist'
 )
 SMW_CONFIG = dict()
 WPM = 240
+
 
 def resourcePath(localPath):
     if hasattr(sys, "_MEIPASS"):
@@ -31,6 +34,7 @@ def resourcePath(localPath):
 
 def CalculateDelayFromWPM(wpm: int) -> float:
     return 60.0 / float(wpm)
+
 
 def readPDF(fileName):
     try:
@@ -47,27 +51,34 @@ def readPDF(fileName):
     return text
 
 
+def resetIndexes(paragraphIndex=0, wordIndex=0, wordSubIndex=0):
+    global PARAGRAPH_INDEX, WORD_INDEX, WORD_SUB_INDEX
+    PARAGRAPH_INDEX = paragraphIndex
+    WORD_INDEX = wordIndex
+    WORD_SUB_INDEX = wordSubIndex
+
+
 async def windowRead(window: gui.Window):
-    global CLOSE, PARAGRAPH_INDEX, WORDS, WORDS_LENGTH, WORD_INDEX, SMW_CONFIG, WPM
+    global CLOSE, PARAGRAPH_INDEX, WORDS, WORDS_LENGTH, WORD_INDEX, WORD_SUB_INDEX
+    global SMW_CONFIG, WPM
     while True:
         await asyncio.sleep(0.01)
-        if window['-browse-'].get():
-            fileName = window['-browse-'].get()
+        if window["-browse-"].get():
+            fileName = window["-browse-"].get()
             if not fileName.lower().endswith(".pdf"):
                 gui.popup("Only PDF files are accepted.")
             else:
                 text = readPDF(fileName)
                 WORDS, WORDS_LENGTH = textClean(text)
-                WORD_INDEX = 0
-                PARAGRAPH_INDEX = 0
+                resetIndexes()
             playPause(window, forcePlay=True)
             savePlist(CONFIG_PATH, SMW_CONFIG)
-            window['-browse-'].update("")
+            window["-browse-"].update("")
             window.refresh()
         event, values = window.read(0)
         if event == "__TIMEOUT__":
             continue
-        # print(f"{event=}")
+        print(f"{event=}")
         if event == "Close" or event == gui.WIN_CLOSED:
             PLAY.set()
             break
@@ -83,24 +94,27 @@ async def windowRead(window: gui.Window):
                 text = f"Error processing pasted material: {e}"
             savePlist(CONFIG_PATH, SMW_CONFIG)
             WORDS, WORDS_LENGTH = textClean(text)
-            WORD_INDEX = 0
-            PARAGRAPH_INDEX = 0
+            resetIndexes()
             playPause(window, forcePlay=True)
         if event == "cursorBeginning":
             if WORD_INDEX == 0:
                 PARAGRAPH_INDEX -= 1
                 PARAGRAPH_INDEX = PARAGRAPH_INDEX if PARAGRAPH_INDEX > 0 else 0
             WORD_INDEX = 0
+            WORD_SUB_INDEX = 0
         if event == "cursorEnd":
             if WORD_INDEX == len(WORDS[PARAGRAPH_INDEX]) - 1 or WORD_INDEX == 0:
                 PARAGRAPH_INDEX += 1
                 WORD_INDEX = 0
+                WORD_SUB_INDEX = 0
                 if PARAGRAPH_INDEX > len(WORDS) - 1:
                     PARAGRAPH_INDEX = len(WORDS) - 1
                     WORD_INDEX = len(WORDS[PARAGRAPH_INDEX]) - 1
             else:
                 WORD_INDEX = len(WORDS[PARAGRAPH_INDEX]) - 1
         if event == "cursorPrevious":
+            if WORD_SUB_INDEX > 0:
+                WORD_SUB_INDEX -= 1
             targetIndex = WORD_INDEX - 1
             if targetIndex < 0:
                 if PARAGRAPH_INDEX == 0:
@@ -111,6 +125,7 @@ async def windowRead(window: gui.Window):
             else:
                 WORD_INDEX = targetIndex
         if event == "cursorNext":
+            WORD_SUB_INDEX = 0
             targetIndex = WORD_INDEX + 1
             if targetIndex > len(WORDS[PARAGRAPH_INDEX]) - 1:
                 if PARAGRAPH_INDEX != len(WORDS) - 1:
@@ -143,14 +158,11 @@ async def wordHandler(window: gui.Window) -> None:
         await wordAdvance(WPM)
         words = WORDS[PARAGRAPH_INDEX]
         if WORD_INDEX < len(words):
-            updateWord(window)
-            WORD_INDEX += 1
+            updateWord(window, advanceIndex=True)
         else:
-            PARAGRAPH_INDEX += 1
-            WORD_INDEX = 0
+            resetIndexes(paragraphIndex=PARAGRAPH_INDEX + 1)
             if PARAGRAPH_INDEX >= len(WORDS):
-                PARAGRAPH_INDEX = 0
-                WORD_INDEX = 0
+                resetIndexes()
                 playPause(window, forcePause=True)
             elif words[-1].endswith(".") or words[-1].endswith("\n"):
                 await wordAdvance(WPM)
@@ -159,8 +171,8 @@ async def wordHandler(window: gui.Window) -> None:
     return
 
 
-def updateWord(window: gui.Window) -> None:
-    global PARAGRAPH_INDEX, WORDS, WORDS_LENGTH, WORD_INDEX, WPM
+def updateWord(window: gui.Window, advanceIndex=False) -> None:
+    global PARAGRAPH_INDEX, WORDS, WORDS_LENGTH, WORD_INDEX, WORD_SUB_INDEX, WPM
     wordsUp = 14
     halfUp = int(wordsUp / 2)
     words = WORDS[PARAGRAPH_INDEX]
@@ -174,11 +186,39 @@ def updateWord(window: gui.Window) -> None:
         preIndex = WORD_INDEX - (wordsUp - ((len(words) - 1) - WORD_INDEX))
         preIndex = preIndex if preIndex > 0 else 0
         postIndex = None
-    window["-OUTPUT-"].update(word)
     window["wordStreamPre"].update(" ".join(words[preIndex:WORD_INDEX]))
     window["wordStreamCurrent"].update(word)
     window["wordStreamPost"].update(" ".join(words[WORD_INDEX + 1 : postIndex]))
+    ## Dashed and slashed words are annoying, break them up
+    iterator = re.finditer(r"\w[-–—/]\w", word) if len(word) > 7 else []
+    matches = list(iterator)
+    startIndex = None
+    endIndex = None
+    if matches:
+        ## Check if the sub index is out of wack
+        if WORD_SUB_INDEX > len(matches):
+            WORD_SUB_INDEX = 0
+        ## What happens if this is the first sub index
+        if WORD_SUB_INDEX == 0:
+            print("first sub")
+            endIndex = matches[WORD_SUB_INDEX].span()[1] - 1
+            WORD_SUB_INDEX += 1
+        ## What happens if this is the last sub index
+        elif WORD_SUB_INDEX == len(matches):
+            print("last sub")
+            startIndex = matches[WORD_SUB_INDEX - 1].span()[1] - 1
+            WORD_SUB_INDEX = 0
+            WORD_INDEX += 1
+        ## What happens the rest of the time
+        else:
+            startIndex = matches[WORD_SUB_INDEX - 1].span()[1] - 1
+            endIndex = matches[WORD_SUB_INDEX].span()[1] - 1
+            WORD_SUB_INDEX += 1
+    elif advanceIndex:
+        WORD_INDEX += 1
+    window["-OUTPUT-"].update(word[startIndex:endIndex])
     window.refresh()
+    return
 
 
 async def wordAdvance(wpm: float = None) -> None:
@@ -197,6 +237,7 @@ async def main(window: gui.Window):
 
 
 def playPause(window: gui.Window, forcePlay=False, forcePause=False):
+    global SMW_CONFIG
     if forcePause:
         play = True
     elif forcePlay:
@@ -210,6 +251,10 @@ def playPause(window: gui.Window, forcePlay=False, forcePause=False):
         PLAY.set()
         window["playPauseButton"].update("Pause")
     window.Refresh()
+    SMW_CONFIG["paragraphIndex"] = PARAGRAPH_INDEX
+    SMW_CONFIG["wordIndex"] = WORD_INDEX
+    savePlist(CONFIG_PATH, SMW_CONFIG)
+
 
 
 def textClean(text: str):
@@ -221,6 +266,7 @@ def textClean(text: str):
 def savePlist(path: str, config: dict) -> None:
     with open(CONFIG_PATH, "wb") as f:
         plistlib.dump(value=config, fp=f)
+
 
 def macClipboardPaste():
     pb = NSPasteboard.generalPasteboard()
@@ -237,6 +283,7 @@ def macClipboardPaste():
     # data = data.decode(encoding='utf-8', errors="replace")
     return
 
+
 if __name__ == "__main__":
     if path.exists(CONFIG_PATH):
         with open(CONFIG_PATH, "rb") as f:
@@ -248,13 +295,23 @@ if __name__ == "__main__":
         if "text" not in SMW_CONFIG:
             SMW_CONFIG["text"] = ""
             saveConfig = True
+        if "wordIndex" not in SMW_CONFIG:
+            SMW_CONFIG["wordIndex"] = WORD_INDEX
+            saveConfig = True
+        if "paragraphIndex" not in SMW_CONFIG:
+            SMW_CONFIG["paragraphIndex"] = PARAGRAPH_INDEX
+            saveConfig = True
         if saveConfig:
             savePlist(CONFIG_PATH, SMW_CONFIG)
     else:
-        SMW_CONFIG = dict(wpm=WPM, text="")
+        SMW_CONFIG = dict(
+            wpm=WPM, text="", paragraphIndex=PARAGRAPH_INDEX, wordIndex=WORD_INDEX
+        )
         savePlist(CONFIG_PATH, SMW_CONFIG)
 
     WPM = int(SMW_CONFIG["wpm"]) or WPM
+    PARAGRAPH_INDEX = int(SMW_CONFIG["paragraphIndex"]) or PARAGRAPH_INDEX
+    WORD_INDEX = int(SMW_CONFIG["wordIndex"]) or WORD_INDEX
     text = SMW_CONFIG["text"] or ""
 
     layout = [
@@ -310,3 +367,7 @@ if __name__ == "__main__":
 
     WORDS, WORDS_LENGTH = textClean(text)
     asyncio.run(main(window))
+
+    SMW_CONFIG["paragraphIndex"] = PARAGRAPH_INDEX
+    SMW_CONFIG["wordIndex"] = WORD_INDEX
+    savePlist(CONFIG_PATH, SMW_CONFIG)
