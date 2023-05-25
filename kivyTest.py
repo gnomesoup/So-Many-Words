@@ -12,7 +12,6 @@ from kivy.utils import get_color_from_hex
 from kivy.config import Config
 from kivy.metrics import dp
 
-import json
 from pypdf import PdfReader
 import re
 
@@ -72,11 +71,10 @@ class SoManyWordsApp(App):
     wpm = NumericProperty(250)
     skipNextBeat = BooleanProperty(False)
     atEndOfWords = BooleanProperty(False)
+    wordUpdated = BooleanProperty(False)
 
     def build(self):
-        self.words = textClean(
-            self.config.get("somanywords", "text")
-        )
+        self.words = textClean(self.config.get("somanywords", "text"))
         self.wpm = int(self.config.get("somanywords", "wpm"))
         self.paragraphIndex = int(self.config.get("somanywords", "paragraphIndex"))
         self.wordIndex = int(self.config.get("somanywords", "wordIndex"))
@@ -93,7 +91,7 @@ class SoManyWordsApp(App):
                 "speed. You can set the words-per-minute below.\nCopy text to the clipboard"
                 ' and hit the "Paste" button to get started.',
                 "wordIndex": "0",
-                "paragraphIndex": "0"
+                "paragraphIndex": "0",
             },
         )
 
@@ -105,7 +103,7 @@ class SoManyWordsApp(App):
             b.text = "pause"
             if self.atEndOfWords:
                 self.resetIndexes()
-            self.clock = Clock.schedule_interval(self.wordUpdate, (60.0 / self.wpm))
+            self.clock = Clock.schedule_interval(self.wordAdvance, (60.0 / self.wpm))
         else:
             b.color = get_color_from_hex("#FC0000")
             b.text = "play"
@@ -126,10 +124,10 @@ class SoManyWordsApp(App):
         ):
             return
         self.wordIndex += 1
-        self.wordSubIndex = 0
-        self.atEndOfWords = False
+        # self.wordSubIndex = 0
+        # self.atEndOfWords = False
         self.indexCheck()
-        self.wordUpdate(advanceIndex=False)
+        self.wordUpdate()
 
     def wordEnd(self):
         self.playPause(status="pause")
@@ -149,14 +147,16 @@ class SoManyWordsApp(App):
         else:
             self.wordIndex = thisParagraphLastIndex
         self.indexCheck()
-        self.wordUpdate(advanceIndex=False)
+        self.wordUpdate()
 
     def wordPrevious(self):
         self.playPause(status="pause")
-        self.wordIndex -= 1
-        self.wordSubIndex = 0
+        if self.wordSubIndex > 0:
+            self.wordSubIndex -= 1
+        else:
+            self.wordIndex -= 1
         self.indexCheck()
-        self.wordUpdate(advanceIndex=False)
+        self.wordUpdate()
 
     def wordBeginning(self):
         self.playPause(status="pause")
@@ -165,50 +165,63 @@ class SoManyWordsApp(App):
         self.wordIndex = 0
         self.wordSubIndex = 0
         self.indexCheck()
-        self.wordUpdate(advanceIndex=False)
+        self.wordUpdate()
 
-    def wordAdvance(self):
-        pass
-
-    def wordUpdate(self, advanceIndex=True, *args):
-        if advanceIndex and self.skipNextBeat:
-            self.skipNextBeat = False
-            return True
-        currentWordLabel = self.root.ids.currentWord
-        ## Dashed and slashed words are annoying, break them up
+    def wordAdvance(self, *args):
+        advanceIndex = True
+        advanceSubIndex = False
+        continuePlay = True
         paragraph = self.words[self.paragraphIndex]
         word = paragraph[self.wordIndex]
+        if self.skipNextBeat:
+            self.skipNextBeat = False
+            return True
         iterator = re.finditer(r"\w[-–—/]\w", word) if len(word) > 7 else []
         matches = list(iterator)
         startIndex = None
         endIndex = None
         if matches:
-            ## Check if the sub index is out of wack
             advanceIndex = False
+            advanceSubIndex = True
+            ## Check if the sub index is out of wack
             if self.wordSubIndex > len(matches):
                 self.wordSubIndex = 0
             ## What happens if this is the first sub index
             if self.wordSubIndex == 0:
-                print("first sub")
                 endIndex = matches[self.wordSubIndex].span()[1] - 1
-                self.wordSubIndex += 1
             ## What happens if this is the last sub index
             elif self.wordSubIndex == len(matches):
-                print("last sub")
                 startIndex = matches[self.wordSubIndex - 1].span()[1] - 1
-                self.wordSubIndex = 0
-                if self.wordIndex == len(paragraph):
-                    self.skipNextBeat = True
-                else:
-                    advanceIndex = True
             ## What happens the rest of the time
             else:
                 startIndex = matches[self.wordSubIndex - 1].span()[1] - 1
                 endIndex = matches[self.wordSubIndex].span()[1] - 1
-                self.wordSubIndex += 1
-        currentWordLabel.text = word[startIndex:endIndex]
+            if not self.wordSubIndex < len(matches):
+                advanceIndex = True
+        if advanceSubIndex:
+            self.wordSubIndex += 1
+        if advanceIndex:
+            self.wordIndex += 1
+            self.wordSubIndex = 0
+            if not self.indexCheck():
+                continuePlay = False
+            self.wordUpdated = False
+        if self.wordIndex == len(self.words[self.paragraphIndex]) - 1:
+            self.skipNextBeat = True
+        paragraph = self.words[self.paragraphIndex]
+        word = paragraph[self.wordIndex][startIndex:endIndex]
+        self.wordUpdate(word=word)
+        return continuePlay
+
+    def wordUpdate(self, word=None):
+        currentWordLabel = self.root.ids.currentWord
+        ## Dashed and slashed words are annoying, break them up
+        paragraph = self.words[self.paragraphIndex]
+        wholeWord = paragraph[self.wordIndex]
+        word = word or wholeWord
+        currentWordLabel.text = word
         wordStreamCurrentLabel = self.root.ids.wordStreamCurrent
-        wordStreamCurrentLabel.text = f" {word} "
+        wordStreamCurrentLabel.text = f" {wholeWord} "
         wordStreamBeforeLabel = self.root.ids.wordStreamBefore
         if self.wordIndex > 0:
             startIndex = None if self.wordIndex < 12 else self.wordIndex - 12
@@ -229,13 +242,7 @@ class SoManyWordsApp(App):
             wordStreamAfterLabel.text = streamText
         else:
             wordStreamAfterLabel.text = ""
-        if advanceIndex:
-            self.wordIndex += 1
-            if self.wordIndex == len(paragraph):
-                self.skipNextBeat = True
-        if not self.indexCheck():
-            self.playPause(status="pause")
-            return False
+        self.wordUpdated = True
         return True
 
     def resetIndexes(self):
@@ -245,6 +252,7 @@ class SoManyWordsApp(App):
         self.skipNextBeat = False
 
     def indexCheck(self):
+        advance = True
         if self.paragraphIndex < 0:
             self.paragraphIndex = 0
         if self.wordIndex == len(self.words[self.paragraphIndex]) - 1:
@@ -258,14 +266,15 @@ class SoManyWordsApp(App):
             self.wordSubIndex = 0
         elif self.wordIndex < 0:
             self.paragraphIndex -= 1
-            self.wordIndex = 0
+            self.wordIndex = len(self.words[self.paragraphIndex]) - 1
             self.wordSubIndex = 0
         if self.paragraphIndex < 0:
             self.resetIndexes()
-            self.root.ids.debugLabel.text = f"[{self.paragraphIndex}, {self.wordIndex}]"
-            return False
-        self.root.ids.debugLabel.text = f"[{self.paragraphIndex}, {self.wordIndex}]"
-        return True
+            advance = False
+        self.root.ids.debugLabel.text = (
+            f"[{self.paragraphIndex}, {self.wordIndex}, {self.wordSubIndex}]"
+        )
+        return advance
 
     def wpmUp(self):
         self.wpm += 10
@@ -330,6 +339,7 @@ class SoManyWordsApp(App):
         self.config.set("somanywords", "wordIndex", self.wordIndex)
         self.config.write()
         return True
+
 
 if __name__ == "__main__":
     Config.read("kivy.ini")

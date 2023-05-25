@@ -38,7 +38,8 @@
             text: " so "
             offset: '10dp'
             size: self.texture_size
-            color: utils.get_color_from_hex("#FC0000")
+            #F37F23
+            color: utils.get_color_from_hex("#F37F23")
             halign: 'center'
             valign: 'top'
             multiline: False
@@ -89,7 +90,7 @@
             id: playButton
             text: 'play'
             radius: root.buttonRadius
-            color: utils.get_color_from_hex("#FC0000") if self.state=='normal' else utils.get_color_from_hex("#515f70")
+            color: utils.get_color_from_hex("#F37F23") if self.state=='normal' else utils.get_color_from_hex("#515f70")
             on_release: app.playPause()
         RoundButton:
             id: nextButton
@@ -112,7 +113,7 @@
             id: wpmInput
             text: str(app.wpm)
             radius: root.buttonRadius
-            color: utils.get_color_from_hex("#FC0000") if self.state=='normal' else utils.get_color_from_hex("#515f70")
+            color: utils.get_color_from_hex("#F37F23") if self.state=='normal' else utils.get_color_from_hex("#515f70")
             on_release: app.wpmManualInput()
         RoundButton:
             id: wpmUpButton
@@ -137,7 +138,7 @@
     # font_name: 'Source Code Pro'
     canvas.before:
         Color:
-            rgba: utils.get_color_from_hex("#FFFFFF") if self.state == 'normal' else utils.get_color_from_hex("#FC0000")
+            rgba: utils.get_color_from_hex("#FFFFFF") if self.state == 'normal' else utils.get_color_from_hex("#F37F23")
         Ellipse:
             pos: self.center[0]- self.radius/2,self.center[1]- self.radius/2
             size: self.radius, self.radius
