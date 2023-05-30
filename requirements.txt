@@ -1,7 +1,8 @@
 asyncio==3.4.3
+bs4==0.0.1
+EbookLib==0.18
+Kivy @ git+https://github.com/kivy/kivy.git@879b0c640b1a2f23e02722054d42a7b501295d16
 pyinstaller==5.10.0
 pyobjc==9.1.1
 pypdf==3.7.1
 PySimpleGUI==4.60.4
-bs4==0.0.1
-EbookLib==0.18

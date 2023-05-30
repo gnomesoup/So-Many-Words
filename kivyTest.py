@@ -3,10 +3,12 @@ from AppKit import NSPasteboard, NSStringPboardType
 
 from kivy.app import App
 from kivy.clock import Clock
+from kivy.core.clipboard import Clipboard
 from kivy.core.text import LabelBase
 from kivy.core.window import Window
 from kivy.properties import ListProperty, NumericProperty, BooleanProperty
 from kivy.uix.boxlayout import BoxLayout
+from kivy.uix.bubble import Bubble
 from kivy.uix.widget import Widget
 from kivy.utils import get_color_from_hex
 from kivy.config import Config
@@ -14,6 +16,8 @@ from kivy.metrics import dp
 
 from pypdf import PdfReader
 import re
+
+# print(get_color_from_hex("#F37F23"))
 
 
 def readPDF(fileName):
@@ -48,9 +52,24 @@ def textClean(text):
     return [paragraph for paragraph in words if paragraph]
 
 
+def getProgress(words, wordIndex, paragraphIndex):
+    position = 0
+    count = 0
+    total = 0
+    for i, paragraph in enumerate(words):
+        for word in paragraph:
+            total += 1
+            if paragraphIndex > i:
+                count += 1
+    count += wordIndex + 1
+    return [str(count), str(total)]
+
+
 class SoManyWordsLayout(BoxLayout):
     pass
 
+class WPMBubble(Bubble):
+    pass
 
 class SoManyWordsApp(App):
     def __init__(self, **kwargs):
@@ -63,23 +82,29 @@ class SoManyWordsApp(App):
             int(Config.getdefault("graphics", "width", 1000)),
             int(Config.getdefault("graphics", "height", 500)),
         )
+        Clock.schedule_once(self.wordUpdate, 2)
 
     words = ListProperty()
     wordIndex = NumericProperty(0)
-    wordSubIndex = NumericProperty(0)
+    wordSubIndex = NumericProperty(-1)
     paragraphIndex = NumericProperty(0)
     wpm = NumericProperty(250)
     skipNextBeat = BooleanProperty(False)
     atEndOfWords = BooleanProperty(False)
-    wordUpdated = BooleanProperty(False)
+    wordIsSubWord = BooleanProperty(False)
 
     def build(self):
+        self.icon = 'App Icons MacOS 12-assets/Icon-MacOS-256x256@1x.png'
         self.words = textClean(self.config.get("somanywords", "text"))
         self.wpm = int(self.config.get("somanywords", "wpm"))
         self.paragraphIndex = int(self.config.get("somanywords", "paragraphIndex"))
         self.wordIndex = int(self.config.get("somanywords", "wordIndex"))
-        self.wordIndex -= 1
-        return SoManyWordsLayout()
+        layout = SoManyWordsLayout()
+        # layout.ids.menuBar.pos_hint = 0
+        # layout.ids.debugLabel.text = (
+        #     f"[{self.paragraphIndex}, {self.wordIndex}, {self.wordSubIndex}]"
+        # )
+        return layout
 
     def build_config(self, config):
         config.read("somanywords.ini")
@@ -95,17 +120,31 @@ class SoManyWordsApp(App):
             },
         )
 
+    def on_pre_enter(self):
+        Clock.schedule_once(self.wakeupApp, 0.25)
+
+    def wakeupApp(self, *args):
+        self.root.ids.menuBar.bottom = self.root.y
+        self.wordUpdate()
+
     def playPause(self, status=None):
         b = self.root.ids.playButton
         status = status or b.text
         if status == "play":
-            b.color = get_color_from_hex("#64778C")
+            b.color = get_color_from_hex("#FFFFFF")
+            b.buttonActiveColor = get_color_from_hex("#FFFFFF")
+            b.buttonColor = get_color_from_hex("#F37F23")
             b.text = "pause"
+            self.indexCheck()
             if self.atEndOfWords:
                 self.resetIndexes()
+            self.atEndOfWords = False
+            self.wordUpdate()
             self.clock = Clock.schedule_interval(self.wordAdvance, (60.0 / self.wpm))
         else:
-            b.color = get_color_from_hex("#FC0000")
+            b.color = get_color_from_hex("#F37F23")
+            b.buttonActiveColor = get_color_from_hex("#F37F23")
+            b.buttonColor = get_color_from_hex("#FFFFFF")
             b.text = "play"
             try:
                 self.clock.cancel()
@@ -117,6 +156,8 @@ class SoManyWordsApp(App):
 
     def wordNext(self):
         self.playPause(status="pause")
+        if self.atEndOfWords:
+            return
         paragraphLength = len(self.words[self.paragraphIndex])
         if (
             self.wordIndex == paragraphLength - 1
@@ -136,7 +177,7 @@ class SoManyWordsApp(App):
         # If we decided we are at the end, don't do anything
         if self.atEndOfWords:
             return
-        self.wordSubIndex = 0
+        self.wordSubIndex = -1
         # If we are on the last paragraph go to the last word of the last paragraph
         if self.paragraphIndex == lastParagraphIndex:
             self.wordIndex = thisParagraphLastIndex
@@ -151,6 +192,7 @@ class SoManyWordsApp(App):
 
     def wordPrevious(self):
         self.playPause(status="pause")
+        self.atEndOfWords = False
         if self.wordSubIndex > 0:
             self.wordSubIndex -= 1
         else:
@@ -160,66 +202,52 @@ class SoManyWordsApp(App):
 
     def wordBeginning(self):
         self.playPause(status="pause")
+        self.atEndOfWords = False
         if self.wordIndex == 0:
             self.paragraphIndex -= 1
         self.wordIndex = 0
-        self.wordSubIndex = 0
+        self.wordSubIndex = -1
         self.indexCheck()
         self.wordUpdate()
 
     def wordAdvance(self, *args):
-        advanceIndex = True
-        advanceSubIndex = False
-        continuePlay = True
-        paragraph = self.words[self.paragraphIndex]
-        word = paragraph[self.wordIndex]
         if self.skipNextBeat:
             self.skipNextBeat = False
             return True
-        iterator = re.finditer(r"\w[-–—/]\w", word) if len(word) > 7 else []
-        matches = list(iterator)
-        startIndex = None
-        endIndex = None
-        if matches:
-            advanceIndex = False
-            advanceSubIndex = True
-            ## Check if the sub index is out of wack
-            if self.wordSubIndex > len(matches):
-                self.wordSubIndex = 0
-            ## What happens if this is the first sub index
-            if self.wordSubIndex == 0:
-                endIndex = matches[self.wordSubIndex].span()[1] - 1
-            ## What happens if this is the last sub index
-            elif self.wordSubIndex == len(matches):
-                startIndex = matches[self.wordSubIndex - 1].span()[1] - 1
-            ## What happens the rest of the time
-            else:
-                startIndex = matches[self.wordSubIndex - 1].span()[1] - 1
-                endIndex = matches[self.wordSubIndex].span()[1] - 1
-            if not self.wordSubIndex < len(matches):
-                advanceIndex = True
-        if advanceSubIndex:
-            self.wordSubIndex += 1
-        if advanceIndex:
+        continuePlay = True
+        if not self.wordIsSubWord:
             self.wordIndex += 1
-            self.wordSubIndex = 0
             if not self.indexCheck():
                 continuePlay = False
-            self.wordUpdated = False
-        if self.wordIndex == len(self.words[self.paragraphIndex]) - 1:
-            self.skipNextBeat = True
         paragraph = self.words[self.paragraphIndex]
-        word = paragraph[self.wordIndex][startIndex:endIndex]
+        word = paragraph[self.wordIndex]
+        iterator = re.finditer(r"\w[-–—/]\w", word) if len(word) > 7 else []
+        matches = list(iterator)
+        if matches:
+            self.wordIsSubWord = True
+            indexes = [0]
+            for item in matches:
+                indexes.append(item.span()[1] - 1)
+            parts = [word[i:j] for i, j in zip(indexes, indexes[1:] + [None])]
+            self.wordSubIndex += 1
+            word = parts[self.wordSubIndex]
+            if self.wordSubIndex == len(parts) - 1:
+                self.wordIsSubWord = False
+                self.wordSubIndex = -1
         self.wordUpdate(word=word)
+        if not self.wordIsSubWord and self.wordIndex == len(paragraph) - 1:
+            self.skipNextBeat = True
+        if not continuePlay:
+            self.playPause(status="pause")
         return continuePlay
 
-    def wordUpdate(self, word=None):
+    def wordUpdate(self, timeCalled=None, word=None, *args):
         currentWordLabel = self.root.ids.currentWord
         ## Dashed and slashed words are annoying, break them up
         paragraph = self.words[self.paragraphIndex]
         wholeWord = paragraph[self.wordIndex]
         word = word or wholeWord
-        currentWordLabel.text = word
+        currentWordLabel.text = str(word)
         wordStreamCurrentLabel = self.root.ids.wordStreamCurrent
         wordStreamCurrentLabel.text = f" {wholeWord} "
         wordStreamBeforeLabel = self.root.ids.wordStreamBefore
@@ -242,63 +270,73 @@ class SoManyWordsApp(App):
             wordStreamAfterLabel.text = streamText
         else:
             wordStreamAfterLabel.text = ""
-        self.wordUpdated = True
+        message = " of ".join(
+            getProgress(self.words, self.wordIndex, self.paragraphIndex)
+        )
+        self.root.ids.debugLabel.text = f"{message}"
+        # self.root.ids.debugLabel.text = f"{message}: {self.atEndOfWords=}"
         return True
 
     def resetIndexes(self):
         self.paragraphIndex = 0
         self.wordIndex = 0
-        self.wordSubIndex = 0
+        self.wordSubIndex = -1
         self.skipNextBeat = False
 
     def indexCheck(self):
-        advance = True
+        continuePlay = True
         if self.paragraphIndex < 0:
             self.paragraphIndex = 0
         if self.wordIndex == len(self.words[self.paragraphIndex]) - 1:
             if self.paragraphIndex == len(self.words) - 1:
                 self.atEndOfWords = True
-                self.root.ids.debugLabel.text = f"end of words"
                 return False
         if self.wordIndex > len(self.words[self.paragraphIndex]) - 1:
             self.paragraphIndex += 1
             self.wordIndex = 0
-            self.wordSubIndex = 0
+            self.wordSubIndex = -1
         elif self.wordIndex < 0:
             self.paragraphIndex -= 1
             self.wordIndex = len(self.words[self.paragraphIndex]) - 1
-            self.wordSubIndex = 0
+            self.wordSubIndex = -1
         if self.paragraphIndex < 0:
             self.resetIndexes()
-            advance = False
-        self.root.ids.debugLabel.text = (
-            f"[{self.paragraphIndex}, {self.wordIndex}, {self.wordSubIndex}]"
-        )
-        return advance
+            continuePlay = False
+        # self.root.ids.debugLabel.text = (
+        #     f"[{self.paragraphIndex}, {self.wordIndex}, {self.wordSubIndex}]"
+        # )
+        return continuePlay
 
     def wpmUp(self):
+        self.playPause(status="pause")
         self.wpm += 10
         self.config.set("somanywords", "wpm", self.wpm)
         self.config.write()
         self.root.ids.wpmInput.text = str(self.wpm)
 
     def wpmDown(self):
+        self.playPause(status="pause")
         self.wpm -= 10
         self.config.set("somanywords", "wpm", self.wpm)
         self.config.write()
         self.root.ids.wpmInput.text = str(self.wpm)
 
     def wpmManualInput(self):
-        pass
+        self.playPause(status="pause")
+        self.wpmBubble = WPMBubble()
+        self.root.ids.mainFloat.add_widget(WPMBubble())
+
+    def setWPM(self, value, instance):
+        self.wpm = int(value)
+        self.root.ids.mainFloat.remove_widget(instance)
 
     def paste(self):
         try:
             self.clock.cancel()
         except:
             pass
-        self.wordIndex = 0
-        self.paragraphIndex = 0
-        self.config.set("somanywords", "text", macClipboardPaste())
+        self.resetIndexes()
+        self.config.set("somanywords", "text", Clipboard.paste())
         self.config.write()
         self.words = textClean(self.config.get("somanywords", "text"))
         self.playPause(status="play")
@@ -308,8 +346,8 @@ class SoManyWordsApp(App):
         return
 
     def _keyboard_down(self, keyboard, keycode, text, modifier):
-        message = f"{keycode}: {modifier}"
-        self.root.ids.debugLabel.text = message
+        # message = f"{keycode}: {modifier}"
+        # self.root.ids.debugLabel.text = message
         if keycode[1] == "spacebar":
             self.playPause()
         if keycode[1] in ["left", "up"]:
@@ -333,6 +371,9 @@ class SoManyWordsApp(App):
         self._keyboard.unbind(on_key_down=self._on_keyboard_down)
         # self._keyboard.unbind(on_key_up=self._on_keyboard_up)
         self._keyboard = None
+    
+    def _on_keyboard_down(self):
+        pass
 
     def on_request_close(self):
         self.config.set("somanywords", "paragraphIndex", self.paragraphIndex)

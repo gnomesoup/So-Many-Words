@@ -3,46 +3,43 @@
 <SoManyWordsLayout>:
     orientation: 'vertical'
     buttonRadius: '52dp'
+    buttonMargin: '62dp'
     canvas:
         Color:
             rgba: utils.get_color_from_hex("#64778C")
         Rectangle:
             pos: self.pos
             size: self.size
-    Label:
-        size_hint_y: 0.1
-        id: debugLabel
-        text: 'debug'
-        size: 200, 24
-    Label:
-        id: currentWord
-        text: 'Welcome'
-        font_size: '100sp'
-        text_size: self.size
-        halign: 'center'
+    FloatLayout:
+        id: mainFloat
         # canvas.before:
         #     Color:
         #         rgba: [1,0,0,1]
         #     Rectangle:
-        #         pos: self.pos
+        #         pos: self.parent.pos
         #         size: self.size
-
-    RelativeLayout:
-        id: wordStreamLayout
-        size_hint: 1, 0.5
+        Label:
+            id: debugLabel
+            size_hint: None, None
+            size: self.texture_size
+            pos_hint: {'top': 1, 'center_x': 0.5}
+            text: 'debug'
+        Label:
+            id: currentWord
+            pos_hint: {'center_x': 0.5, 'center_y': 0.6}
+            size_hint: None, None
+            size: self.texture_size
+            text: 'Welcome'
+            font_size: '100sp'
         Label: 
             id: wordStreamCurrent
             size_hint: None, None
-            pos_hint: {'center_x': 0.5, 'top': 1}
+            pos_hint: {'center_x': 0.5}
+            top: root.ids.currentWord.y
             font_size: '36sp'
             text: " so "
-            offset: '10dp'
             size: self.texture_size
-            #F37F23
             color: utils.get_color_from_hex("#F37F23")
-            halign: 'center'
-            valign: 'top'
-            multiline: False
             # canvas.before:
             #     Color:
             #         rgba: [1,0.5,0,1]
@@ -52,93 +49,103 @@
         StreamLabel:
             id: wordStreamBefore
             right: root.ids.wordStreamCurrent.x 
+            y: root.ids.wordStreamCurrent.y
             text: "...to"
             halign: 'right'
         StreamLabel:
             id: wordStreamAfter
             x: root.ids.wordStreamCurrent.right
+            y: root.ids.wordStreamCurrent.y
             text: "many words"
             halign: 'left'
 
-    BoxLayout:
-        size_hint: 1, 0.25
-        orientation: 'horizontal'
-        RoundButton:
-            id: openButton
-            text: 'open'
-            radius: root.buttonRadius
-            on_release: app.paste()
-        RoundPlaceholder:
-            radius: root.buttonRadius
-        RoundPlaceholder:
-            radius: root.buttonRadius
-        RoundPlaceholder:
-            radius: root.buttonRadius
-        RoundPlaceholder:
-            radius: root.buttonRadius
-        RoundButton:
-            id: beginningButton
-            text: '|<'
-            radius: root.buttonRadius
-            on_release: app.wordBeginning()
-        RoundButton:
-            id: previousButton
-            text: '<'
-            radius: root.buttonRadius
-            on_release: app.wordPrevious()
-        RoundButton:
-            id: playButton
-            text: 'play'
-            radius: root.buttonRadius
-            color: utils.get_color_from_hex("#F37F23") if self.state=='normal' else utils.get_color_from_hex("#515f70")
-            on_release: app.playPause()
-        RoundButton:
-            id: nextButton
-            text: '>'
-            radius: root.buttonRadius
-            on_release: app.wordNext()
-        RoundButton:
-            id: endButton
-            text: '>|'
-            radius: root.buttonRadius
-            on_release: app.wordEnd()
-        RoundPlaceholder:
-            radius: root.buttonRadius
-        RoundButton:
-            id: wpmDownButton
-            text: '-'
-            radius: root.buttonRadius
-            on_release: app.wpmDown()
-        RoundButton:
-            id: wpmInput
-            text: str(app.wpm)
-            radius: root.buttonRadius
-            color: utils.get_color_from_hex("#F37F23") if self.state=='normal' else utils.get_color_from_hex("#515f70")
-            on_release: app.wpmManualInput()
-        RoundButton:
-            id: wpmUpButton
-            text: '+'
-            radius: root.buttonRadius
-            on_release: app.wpmUp()
-        RoundButton:
-            id: helpButton
-            text: '?'
-            radius: root.buttonRadius
+        BoxLayout:
+            id: menuBar
+            orientation: 'horizontal'
+            size_hint: None, None
+            width: '930dp'
+            height: '72dp'
+            pos_hint: {'center_x': 0.5, 'bottom': 0}
+            # canvas.before:
+            #     Color:
+            #         rgba: utils.get_color_from_hex("#F37F23")
+            #     Rectangle:
+            #         pos: self.pos
+            #         size: self.size
+            RoundButton:
+                id: openButton
+                text: 'open'
+                radius: root.buttonRadius
+                on_release: app.paste()
+            RoundPlaceholder:
+                radius: root.buttonRadius
+            RoundPlaceholder:
+                radius: root.buttonRadius
+            RoundPlaceholder:
+                radius: root.buttonRadius
+            RoundPlaceholder:
+                radius: root.buttonRadius
+            RoundButton:
+                id: beginningButton
+                text: '|<'
+                radius: root.buttonRadius
+                on_release: app.wordBeginning()
+            RoundButton:
+                id: previousButton
+                text: '<'
+                radius: root.buttonRadius
+                on_release: app.wordPrevious()
+            RoundButton:
+                id: playButton
+                text: 'play'
+                radius: root.buttonRadius
+                color: utils.get_color_from_hex("#F37F23") if self.state=='normal' else utils.get_color_from_hex("#515f70")
+                on_release: app.playPause()
+            RoundButton:
+                id: nextButton
+                text: '>'
+                radius: root.buttonRadius
+                on_release: app.wordNext()
+            RoundButton:
+                id: endButton
+                text: '>|'
+                radius: root.buttonRadius
+                on_release: app.wordEnd()
+            RoundPlaceholder:
+                radius: root.buttonRadius
+            RoundButton:
+                id: wpmDownButton
+                text: '-'
+                radius: root.buttonRadius
+                on_release: app.wpmDown()
+            RoundButton:
+                id: wpmInput
+                text: str(app.wpm)
+                radius: root.buttonRadius
+                color: utils.get_color_from_hex("#F37F23") if self.state=='normal' else utils.get_color_from_hex("#515f70")
+                on_release: app.wpmManualInput()
+            RoundButton:
+                id: wpmUpButton
+                text: '+'
+                radius: root.buttonRadius
+                on_release: app.wpmUp()
+            RoundButton:
+                id: helpButton
+                text: '?'
+                radius: root.buttonRadius
 
 <RoundButton@Button>:
     radius: 52
-    margin: self.radius * (1/16)
-    # size_hint: 1, None
-    # size: self.radius + self.margin, self.radius + self.margin * 2
+    buttonActiveColor: list(utils.get_color_from_hex("#F37F23"))
+    buttonColor: [1,1,1,1]
+    buttonActiveColor: [0.9530,0.4980,0.1373,1]
     background_color: (0,0,0,0)
     background_normal: ''
     color: utils.get_color_from_hex("#515f70")
     font_size: '17sp'
-    # bold: True
-    # font_name: 'Source Code Pro'
     canvas.before:
         Color:
-            rgba: utils.get_color_from_hex("#FFFFFF") if self.state == 'normal' else utils.get_color_from_hex("#F37F23")
+            rgba: self.buttonColor if self.state == 'normal' else self.buttonActiveColor
         Ellipse:
             pos: self.center[0]- self.radius/2,self.center[1]- self.radius/2
             size: self.radius, self.radius
@@ -148,9 +155,6 @@
 <RoundPlaceholder@Label>
     text: ""
     radius: 42
-    margin: self.radius * (1/16)
-    # size_hint: None, None
-    # size: self.radius + self.margin, self.radius + self.margin * 2
     canvas.before:
         Color:
             rgba: utils.get_color_from_hex("#FFFFFF32")
@@ -161,9 +165,26 @@
             angle_end: 360
 
 <StreamLabel@Label>
-    size_hint: 1, 1
+    size_hint: None, None
     color: utils.get_color_from_hex("#FFFFFFA0")
-    font_size: '36sp'
     text_size: self.size
-    valign: 'top'
-    multiline: False
+    width: '1000dp'
+    font_size: '36sp'
+
+<WPMBubble>
+    id: wpmBubble
+    size_hint: None, None
+    size: ('200dp', '50dp')
+    x: app.root.ids.wpmInput.x - dp(68)
+    y: app.root.ids.wpmInput.top
+    # pos_hint: {"center_x": 0.5, "center_y": 0.5}
+    BubbleContent:
+        Label:
+            text: "Enter WPM"
+        TextInput:
+            id: wpmBubbleTextInput
+            text: str(app.wpm)
+            multiline: False
+            halign: 'center'
+            padding_y: [self.height / 2.0 - (self.line_height / 2.0) * len(self._lines), 0]
+            on_text_validate: app.setWPM(self.text, root)
