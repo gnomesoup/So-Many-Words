@@ -1,39 +1,22 @@
 # -*- coding: utf-8 -*-
-import asyncio
-import base64
-from AppKit import NSPasteboard, NSStringPboardType
-from codecs import encode
-from os import environ, path
-import plistlib
+
+from kivy.app import App
+from kivy.clock import Clock
+from kivy.core.clipboard import Clipboard
+from kivy.core.text import LabelBase
+from kivy.core.window import Window
+from kivy.properties import ListProperty, NumericProperty, BooleanProperty
+from kivy.uix.boxlayout import BoxLayout
+from kivy.uix.bubble import Bubble
+from kivy.uix.widget import Widget
+from kivy.utils import get_color_from_hex
+from kivy.config import Config
+from kivy.metrics import dp
+
 from pypdf import PdfReader
-import PySimpleGUI as gui
 import re
-from subprocess import Popen, PIPE
-import sys
 
-PLAY = asyncio.Event()
-CLOSE = False
-WORDS = []
-WORDS_LENGTH = 0
-WORD_INDEX = 0
-WORD_SUB_INDEX = 0
-PARAGRAPH_INDEX = 0
-CONFIG_PATH = (
-    f'/Users/{environ.get("USER")}/Library/Preferences/com.mmjo.somanywords.plist'
-)
-SMW_CONFIG = dict()
-WPM = 240
-
-
-def resourcePath(localPath):
-    if hasattr(sys, "_MEIPASS"):
-        return path.join(sys._MEIPASS, localPath)
-    else:
-        return localPath
-
-
-def CalculateDelayFromWPM(wpm: int) -> float:
-    return 60.0 / float(wpm)
+# print(get_color_from_hex("#F37F23"))
 
 
 def readPDF(fileName):
@@ -51,223 +34,6 @@ def readPDF(fileName):
     return text
 
 
-def resetIndexes(paragraphIndex=0, wordIndex=0, wordSubIndex=0):
-    global PARAGRAPH_INDEX, WORD_INDEX, WORD_SUB_INDEX
-    PARAGRAPH_INDEX = paragraphIndex
-    WORD_INDEX = wordIndex
-    WORD_SUB_INDEX = wordSubIndex
-
-
-async def windowRead(window: gui.Window):
-    global CLOSE, PARAGRAPH_INDEX, WORDS, WORDS_LENGTH, WORD_INDEX, WORD_SUB_INDEX
-    global SMW_CONFIG, WPM
-    while True:
-        await asyncio.sleep(0.01)
-        if window["-browse-"].get():
-            fileName = window["-browse-"].get()
-            if not fileName.lower().endswith(".pdf"):
-                gui.popup("Only PDF files are accepted.")
-            else:
-                text = readPDF(fileName)
-                WORDS, WORDS_LENGTH = textClean(text)
-                resetIndexes()
-            playPause(window, forcePlay=True)
-            savePlist(CONFIG_PATH, SMW_CONFIG)
-            window["-browse-"].update("")
-            window.refresh()
-        event, values = window.read(0)
-        if event == "__TIMEOUT__":
-            continue
-        print(f"{event=}")
-        if event == "Close" or event == gui.WIN_CLOSED:
-            PLAY.set()
-            break
-        if event == "playPauseButton":
-            playPause(window)
-        if event == "pasteButton":
-            try:
-                text = macClipboardPaste()
-                if not text:
-                    text = "Clipboard does not contain text"
-                SMW_CONFIG["text"] = str(text)
-            except Exception as e:
-                text = f"Error processing pasted material: {e}"
-            savePlist(CONFIG_PATH, SMW_CONFIG)
-            WORDS, WORDS_LENGTH = textClean(text)
-            resetIndexes()
-            playPause(window, forcePlay=True)
-        if event == "cursorBeginning":
-            if WORD_INDEX == 0:
-                PARAGRAPH_INDEX -= 1
-                PARAGRAPH_INDEX = PARAGRAPH_INDEX if PARAGRAPH_INDEX > 0 else 0
-            WORD_INDEX = 0
-            WORD_SUB_INDEX = 0
-        if event == "cursorEnd":
-            if WORD_INDEX == len(WORDS[PARAGRAPH_INDEX]) - 1 or WORD_INDEX == 0:
-                PARAGRAPH_INDEX += 1
-                WORD_INDEX = 0
-                WORD_SUB_INDEX = 0
-                if PARAGRAPH_INDEX > len(WORDS) - 1:
-                    PARAGRAPH_INDEX = len(WORDS) - 1
-                    WORD_INDEX = len(WORDS[PARAGRAPH_INDEX]) - 1
-            else:
-                WORD_INDEX = len(WORDS[PARAGRAPH_INDEX]) - 1
-        if event == "cursorPrevious":
-            if WORD_SUB_INDEX > 0:
-                WORD_SUB_INDEX -= 1
-            targetIndex = WORD_INDEX - 1
-            if targetIndex < 0:
-                if PARAGRAPH_INDEX == 0:
-                    WORD_INDEX = 0
-                else:
-                    PARAGRAPH_INDEX -= 1
-                    WORD_INDEX = len(WORDS[PARAGRAPH_INDEX]) - 1
-            else:
-                WORD_INDEX = targetIndex
-        if event == "cursorNext":
-            WORD_SUB_INDEX = 0
-            targetIndex = WORD_INDEX + 1
-            if targetIndex > len(WORDS[PARAGRAPH_INDEX]) - 1:
-                if PARAGRAPH_INDEX != len(WORDS) - 1:
-                    PARAGRAPH_INDEX += 1
-                    WORD_INDEX = 0
-            else:
-                WORD_INDEX = targetIndex
-        if event.startswith("cursor"):
-            playPause(window, forcePause=True)
-            updateWord(window)
-        if event == "wpmAdd":
-            WPM += 20
-        if event == "wpmSubtract":
-            WPM -= 20
-        if event.startswith("wpm"):
-            window["wpm"].update(f"{WPM} wpm")
-            SMW_CONFIG["wpm"] = WPM
-            savePlist(CONFIG_PATH, SMW_CONFIG)
-
-    CLOSE = True
-    window.close()
-    return
-
-
-async def wordHandler(window: gui.Window) -> None:
-    global PARAGRAPH_INDEX, WORDS, WORDS_LENGTH, WORD_INDEX, WPM
-    while True:
-        if CLOSE:
-            break
-        await wordAdvance(WPM)
-        words = WORDS[PARAGRAPH_INDEX]
-        if WORD_INDEX < len(words):
-            updateWord(window, advanceIndex=True)
-        else:
-            resetIndexes(paragraphIndex=PARAGRAPH_INDEX + 1)
-            if PARAGRAPH_INDEX >= len(WORDS):
-                resetIndexes()
-                playPause(window, forcePause=True)
-            elif words[-1].endswith(".") or words[-1].endswith("\n"):
-                await wordAdvance(WPM)
-        if CLOSE:
-            break
-    return
-
-
-def updateWord(window: gui.Window, advanceIndex=False) -> None:
-    global PARAGRAPH_INDEX, WORDS, WORDS_LENGTH, WORD_INDEX, WORD_SUB_INDEX, WPM
-    wordsUp = 14
-    halfUp = int(wordsUp / 2)
-    words = WORDS[PARAGRAPH_INDEX]
-    word = words[WORD_INDEX]
-    preIndex = WORD_INDEX - halfUp
-    postIndex = WORD_INDEX + halfUp
-    if preIndex < 0:
-        preIndex = None
-        postIndex = (wordsUp - WORD_INDEX) + WORD_INDEX
-    elif postIndex > len(words) - 1:
-        preIndex = WORD_INDEX - (wordsUp - ((len(words) - 1) - WORD_INDEX))
-        preIndex = preIndex if preIndex > 0 else 0
-        postIndex = None
-    window["wordStreamPre"].update(" ".join(words[preIndex:WORD_INDEX]))
-    window["wordStreamCurrent"].update(word)
-    window["wordStreamPost"].update(" ".join(words[WORD_INDEX + 1 : postIndex]))
-    ## Dashed and slashed words are annoying, break them up
-    iterator = re.finditer(r"\w[-–—/]\w", word) if len(word) > 7 else []
-    matches = list(iterator)
-    startIndex = None
-    endIndex = None
-    if matches:
-        ## Check if the sub index is out of wack
-        if WORD_SUB_INDEX > len(matches):
-            WORD_SUB_INDEX = 0
-        ## What happens if this is the first sub index
-        if WORD_SUB_INDEX == 0:
-            print("first sub")
-            endIndex = matches[WORD_SUB_INDEX].span()[1] - 1
-            WORD_SUB_INDEX += 1
-        ## What happens if this is the last sub index
-        elif WORD_SUB_INDEX == len(matches):
-            print("last sub")
-            startIndex = matches[WORD_SUB_INDEX - 1].span()[1] - 1
-            WORD_SUB_INDEX = 0
-            WORD_INDEX += 1
-        ## What happens the rest of the time
-        else:
-            startIndex = matches[WORD_SUB_INDEX - 1].span()[1] - 1
-            endIndex = matches[WORD_SUB_INDEX].span()[1] - 1
-            WORD_SUB_INDEX += 1
-    elif advanceIndex:
-        WORD_INDEX += 1
-    window["-OUTPUT-"].update(word[startIndex:endIndex])
-    window.refresh()
-    return
-
-
-async def wordAdvance(wpm: float = None) -> None:
-    wpm = wpm or 250
-    delay = CalculateDelayFromWPM(wpm)
-    await asyncio.sleep(delay)
-    await PLAY.wait()
-    if CLOSE:
-        return
-    return
-
-
-async def main(window: gui.Window):
-    await asyncio.gather(windowRead(window), wordHandler(window))
-    return
-
-
-def playPause(window: gui.Window, forcePlay=False, forcePause=False):
-    global SMW_CONFIG
-    if forcePause:
-        play = True
-    elif forcePlay:
-        play = False
-    else:
-        play = PLAY.is_set()
-    if play:
-        PLAY.clear()
-        window["playPauseButton"].update("Play")
-    else:
-        PLAY.set()
-        window["playPauseButton"].update("Pause")
-    window.Refresh()
-    SMW_CONFIG["paragraphIndex"] = PARAGRAPH_INDEX
-    SMW_CONFIG["wordIndex"] = WORD_INDEX
-    savePlist(CONFIG_PATH, SMW_CONFIG)
-
-
-
-def textClean(text: str):
-    words = [words.split() for words in text.splitlines()]
-    words = [paragraph for paragraph in words if paragraph]
-    return words, len(words)
-
-
-def savePlist(path: str, config: dict) -> None:
-    with open(CONFIG_PATH, "wb") as f:
-        plistlib.dump(value=config, fp=f)
-
-
 def macClipboardPaste():
     pb = NSPasteboard.generalPasteboard()
     pbType = pb.availableTypeFromArray_([NSStringPboardType])
@@ -277,97 +43,351 @@ def macClipboardPaste():
             return clipString
         else:
             return ""
-    # p = Popen(["pbpaste", "-P RTL"], stdout=PIPE)
-    # p.wait()
-    # data = p.stdout.read()
-    # data = data.decode(encoding='utf-8', errors="replace")
     return
 
 
-if __name__ == "__main__":
-    if path.exists(CONFIG_PATH):
-        with open(CONFIG_PATH, "rb") as f:
-            SMW_CONFIG = plistlib.load(f)
-        saveConfig = False
-        if "wpm" not in SMW_CONFIG:
-            SMW_CONFIG["wpm"] = WPM
-            saveConfig = True
-        if "text" not in SMW_CONFIG:
-            SMW_CONFIG["text"] = ""
-            saveConfig = True
-        if "wordIndex" not in SMW_CONFIG:
-            SMW_CONFIG["wordIndex"] = WORD_INDEX
-            saveConfig = True
-        if "paragraphIndex" not in SMW_CONFIG:
-            SMW_CONFIG["paragraphIndex"] = PARAGRAPH_INDEX
-            saveConfig = True
-        if saveConfig:
-            savePlist(CONFIG_PATH, SMW_CONFIG)
-    else:
-        SMW_CONFIG = dict(
-            wpm=WPM, text="", paragraphIndex=PARAGRAPH_INDEX, wordIndex=WORD_INDEX
+def textClean(text):
+    words = [words.split() for words in text.splitlines()]
+    return [paragraph for paragraph in words if paragraph]
+
+
+def getProgress(words, wordIndex, paragraphIndex):
+    position = 0
+    count = 0
+    total = 0
+    for i, paragraph in enumerate(words):
+        for word in paragraph:
+            total += 1
+            if paragraphIndex > i:
+                count += 1
+    count += wordIndex + 1
+    return [str(count), str(total)]
+
+
+class SoManyWordsLayout(BoxLayout):
+    pass
+
+class WPMBubble(Bubble):
+    pass
+
+class SoManyWordsApp(App):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+        self._keyboard = Window.request_keyboard(self._keyboard_closed, None)
+        self._keyboard.bind(on_key_down=self._keyboard_down)
+        Window.bind(on_dropfile=self._on_file_drop)
+        Window.size = (
+            int(Config.getdefault("graphics", "width", 1000)),
+            int(Config.getdefault("graphics", "height", 500)),
         )
-        savePlist(CONFIG_PATH, SMW_CONFIG)
+        Clock.schedule_once(self.wordUpdate, 2)
 
-    WPM = int(SMW_CONFIG["wpm"]) or WPM
-    PARAGRAPH_INDEX = int(SMW_CONFIG["paragraphIndex"]) or PARAGRAPH_INDEX
-    WORD_INDEX = int(SMW_CONFIG["wordIndex"]) or WORD_INDEX
-    text = SMW_CONFIG["text"] or ""
+    words = ListProperty()
+    wordIndex = NumericProperty(0)
+    wordSubIndex = NumericProperty(-1)
+    paragraphIndex = NumericProperty(0)
+    wpm = NumericProperty(250)
+    skipNextBeat = BooleanProperty(False)
+    atEndOfWords = BooleanProperty(False)
+    wordIsSubWord = BooleanProperty(False)
 
-    layout = [
-        [gui.Text("Ready?", font=("Any", 64, "bold"), key="-OUTPUT-")],
-        [
-            gui.Text("press", key="wordStreamPre", pad=((5, 0), 3), font=("Any", 16)),
-            gui.Text(
-                "play",
-                key="wordStreamCurrent",
-                pad=(0, 3),
-                text_color="Red",
-                font=("Any", 16),
-            ),
-            gui.Text(
-                "to begin", key="wordStreamPost", pad=((0, 5), 3), font=("Any", 16)
-            ),
-        ],
-        [
-            gui.Button("Paste", key="pasteButton"),
-            gui.FileBrowse(target="-browse-", file_types=(("PDF Files", "*.txt"),)),
-            gui.Input(key="-browse-", visible=False),
-            gui.Text(" " * 60),
-            gui.Button("|<", key="cursorBeginning"),
-            gui.Button("<", key="cursorPrevious"),
-            gui.Button("Play", key="playPauseButton"),
-            gui.Button(">", key="cursorNext"),
-            gui.Button(">|", key="cursorEnd"),
-            gui.Text(" " * 60),
-            gui.Button("-", key="wpmSubtract"),
-            gui.Text(f"{WPM} wpm", key="wpm", font=("Any", 12)),
-            gui.Button("+", key="wpmAdd"),
-        ],
-    ]
+    def build(self):
+        self.icon = 'App Icons MacOS 12-assets/Icon-MacOS-256x256@1x.png'
+        self.words = textClean(self.config.get("somanywords", "text"))
+        self.wpm = int(self.config.get("somanywords", "wpm"))
+        self.paragraphIndex = int(self.config.get("somanywords", "paragraphIndex"))
+        self.wordIndex = int(self.config.get("somanywords", "wordIndex"))
+        layout = SoManyWordsLayout()
+        # layout.ids.menuBar.pos_hint = 0
+        # layout.ids.debugLabel.text = (
+        #     f"[{self.paragraphIndex}, {self.wordIndex}, {self.wordSubIndex}]"
+        # )
+        return layout
 
-    icon = base64.b64encode(open(resourcePath("./icon.png"), "rb").read())
-    gui.set_options(icon=icon)
-    window = gui.Window(
-        title="So Many Words", layout=layout, finalize=True, element_justification="c"
-    )
-    window.bind("<space>", "playPauseButton")
-    window.bind("<Ctrl><v>", "pasteButton")
-    window.bind("<Left>", "cursorPrevious")
-    window.bind("<Shift_L><Left>", "cursorBeginning")
-    window.bind("<Right>", "cursorNext")
-    window.bind("<Shift_L><Right>", "cursorEnd")
-    window.bind("<v>", "pasteButton")
+    def build_config(self, config):
+        config.read("somanywords.ini")
+        config.setdefaults(
+            "somanywords",
+            {
+                "wpm": "250",
+                "text": "This utility will display words to you one at a time at your desired "
+                "speed. You can set the words-per-minute below.\nCopy text to the clipboard"
+                ' and hit the "Paste" button to get started.',
+                "wordIndex": "0",
+                "paragraphIndex": "0",
+            },
+        )
 
-    text = text or (
-        "This utility will display words to you at the words per minute "
-        f"(WPM) specified below.\nCopy text to the clipboard and hit "
-        'the "Paste" button.'
-    )
+    def on_pre_enter(self):
+        Clock.schedule_once(self.wakeupApp, 0.25)
 
-    WORDS, WORDS_LENGTH = textClean(text)
-    asyncio.run(main(window))
+    def wakeupApp(self, *args):
+        self.root.ids.menuBar.bottom = self.root.y
+        self.wordUpdate()
 
-    SMW_CONFIG["paragraphIndex"] = PARAGRAPH_INDEX
-    SMW_CONFIG["wordIndex"] = WORD_INDEX
-    savePlist(CONFIG_PATH, SMW_CONFIG)
+    def playPause(self, status=None):
+        b = self.root.ids.playButton
+        status = status or b.text
+        if status == "play":
+            b.color = get_color_from_hex("#FFFFFF")
+            b.buttonActiveColor = get_color_from_hex("#FFFFFF")
+            b.buttonColor = get_color_from_hex("#F37F23")
+            b.text = "pause"
+            self.indexCheck()
+            if self.atEndOfWords:
+                self.resetIndexes()
+            self.atEndOfWords = False
+            self.wordUpdate()
+            self.clock = Clock.schedule_interval(self.wordAdvance, (60.0 / self.wpm))
+        else:
+            b.color = get_color_from_hex("#F37F23")
+            b.buttonActiveColor = get_color_from_hex("#F37F23")
+            b.buttonColor = get_color_from_hex("#FFFFFF")
+            b.text = "play"
+            try:
+                self.clock.cancel()
+            except:
+                pass
+            self.config.set("somanywords", "paragraphIndex", self.paragraphIndex)
+            self.config.set("somanywords", "wordIndex", self.wordIndex)
+            self.config.write()
+
+    def wordNext(self):
+        self.playPause(status="pause")
+        if self.atEndOfWords:
+            return
+        paragraphLength = len(self.words[self.paragraphIndex])
+        if (
+            self.wordIndex == paragraphLength - 1
+            and self.paragraphIndex == len(self.words) - 1
+        ):
+            return
+        self.wordIndex += 1
+        # self.wordSubIndex = 0
+        # self.atEndOfWords = False
+        self.indexCheck()
+        self.wordUpdate()
+
+    def wordEnd(self):
+        self.playPause(status="pause")
+        lastParagraphIndex = len(self.words) - 1
+        thisParagraphLastIndex = len(self.words[self.paragraphIndex]) - 1
+        # If we decided we are at the end, don't do anything
+        if self.atEndOfWords:
+            return
+        self.wordSubIndex = -1
+        # If we are on the last paragraph go to the last word of the last paragraph
+        if self.paragraphIndex == lastParagraphIndex:
+            self.wordIndex = thisParagraphLastIndex
+        # If we are in the middle of a paragraph, go to the end
+        elif self.wordIndex == thisParagraphLastIndex or self.wordIndex == 0:
+            self.paragraphIndex += 1
+            self.wordIndex = 0
+        else:
+            self.wordIndex = thisParagraphLastIndex
+        self.indexCheck()
+        self.wordUpdate()
+
+    def wordPrevious(self):
+        self.playPause(status="pause")
+        self.atEndOfWords = False
+        if self.wordSubIndex > 0:
+            self.wordSubIndex -= 1
+        else:
+            self.wordIndex -= 1
+        self.indexCheck()
+        self.wordUpdate()
+
+    def wordBeginning(self):
+        self.playPause(status="pause")
+        self.atEndOfWords = False
+        if self.wordIndex == 0:
+            self.paragraphIndex -= 1
+        self.wordIndex = 0
+        self.wordSubIndex = -1
+        self.indexCheck()
+        self.wordUpdate()
+
+    def wordAdvance(self, *args):
+        if self.skipNextBeat:
+            self.skipNextBeat = False
+            return True
+        continuePlay = True
+        if not self.wordIsSubWord:
+            self.wordIndex += 1
+            if not self.indexCheck():
+                continuePlay = False
+        paragraph = self.words[self.paragraphIndex]
+        word = paragraph[self.wordIndex]
+        iterator = re.finditer(r"\w[-–—/]\w", word) if len(word) > 7 else []
+        matches = list(iterator)
+        if matches:
+            self.wordIsSubWord = True
+            indexes = [0]
+            for item in matches:
+                indexes.append(item.span()[1] - 1)
+            parts = [word[i:j] for i, j in zip(indexes, indexes[1:] + [None])]
+            self.wordSubIndex += 1
+            word = parts[self.wordSubIndex]
+            if self.wordSubIndex == len(parts) - 1:
+                self.wordIsSubWord = False
+                self.wordSubIndex = -1
+        self.wordUpdate(word=word)
+        if not self.wordIsSubWord and self.wordIndex == len(paragraph) - 1:
+            self.skipNextBeat = True
+        if not continuePlay:
+            self.playPause(status="pause")
+        return continuePlay
+
+    def wordUpdate(self, timeCalled=None, word=None, *args):
+        currentWordLabel = self.root.ids.currentWord
+        ## Dashed and slashed words are annoying, break them up
+        paragraph = self.words[self.paragraphIndex]
+        wholeWord = paragraph[self.wordIndex]
+        word = word or wholeWord
+        currentWordLabel.text = str(word)
+        wordStreamCurrentLabel = self.root.ids.wordStreamCurrent
+        wordStreamCurrentLabel.text = f" {wholeWord} "
+        wordStreamBeforeLabel = self.root.ids.wordStreamBefore
+        if self.wordIndex > 0:
+            startIndex = None if self.wordIndex < 12 else self.wordIndex - 12
+            streamText = " ".join(paragraph[startIndex : self.wordIndex])
+            if len(streamText) > 42:
+                streamText = streamText[-42:]
+            wordStreamBeforeLabel.text = streamText
+        else:
+            wordStreamBeforeLabel.text = ""
+        wordStreamAfterLabel = self.root.ids.wordStreamAfter
+        if self.wordIndex < len(paragraph) - 1:
+            endIndex = (
+                None if self.wordIndex > len(paragraph) - 12 else self.wordIndex + 12
+            )
+            streamText = " ".join(paragraph[self.wordIndex + 1 : endIndex])
+            if len(streamText) > 42:
+                streamText = streamText[:42]
+            wordStreamAfterLabel.text = streamText
+        else:
+            wordStreamAfterLabel.text = ""
+        message = " of ".join(
+            getProgress(self.words, self.wordIndex, self.paragraphIndex)
+        )
+        self.root.ids.debugLabel.text = f"{message}"
+        # self.root.ids.debugLabel.text = f"{message}: {self.atEndOfWords=}"
+        return True
+
+    def resetIndexes(self):
+        self.paragraphIndex = 0
+        self.wordIndex = 0
+        self.wordSubIndex = -1
+        self.skipNextBeat = False
+
+    def indexCheck(self):
+        continuePlay = True
+        if self.paragraphIndex < 0:
+            self.paragraphIndex = 0
+        if self.wordIndex == len(self.words[self.paragraphIndex]) - 1:
+            if self.paragraphIndex == len(self.words) - 1:
+                self.atEndOfWords = True
+                return False
+        if self.wordIndex > len(self.words[self.paragraphIndex]) - 1:
+            self.paragraphIndex += 1
+            self.wordIndex = 0
+            self.wordSubIndex = -1
+        elif self.wordIndex < 0:
+            self.paragraphIndex -= 1
+            self.wordIndex = len(self.words[self.paragraphIndex]) - 1
+            self.wordSubIndex = -1
+        if self.paragraphIndex < 0:
+            self.resetIndexes()
+            continuePlay = False
+        # self.root.ids.debugLabel.text = (
+        #     f"[{self.paragraphIndex}, {self.wordIndex}, {self.wordSubIndex}]"
+        # )
+        return continuePlay
+
+    def wpmUp(self):
+        self.playPause(status="pause")
+        self.wpm += 10
+        self.config.set("somanywords", "wpm", self.wpm)
+        self.config.write()
+        self.root.ids.wpmInput.text = str(self.wpm)
+
+    def wpmDown(self):
+        self.playPause(status="pause")
+        self.wpm -= 10
+        self.config.set("somanywords", "wpm", self.wpm)
+        self.config.write()
+        self.root.ids.wpmInput.text = str(self.wpm)
+
+    def wpmManualInput(self):
+        self.playPause(status="pause")
+        self.wpmBubble = WPMBubble()
+        self.root.ids.mainFloat.add_widget(WPMBubble())
+
+    def setWPM(self, value, instance):
+        self.wpm = int(value)
+        self.root.ids.mainFloat.remove_widget(instance)
+
+    def paste(self):
+        try:
+            self.clock.cancel()
+        except:
+            pass
+        self.resetIndexes()
+        self.config.set("somanywords", "text", Clipboard.paste())
+        self.config.write()
+        self.words = textClean(self.config.get("somanywords", "text"))
+        self.playPause(status="play")
+
+    def _on_file_drop(self, window, filepath):
+        self.root.ids.debugLabel.text = str(filepath)
+        return
+
+    def _keyboard_down(self, keyboard, keycode, text, modifier):
+        # message = f"{keycode}: {modifier}"
+        # self.root.ids.debugLabel.text = message
+        if keycode[1] == "spacebar":
+            self.playPause()
+        if keycode[1] in ["left", "up"]:
+            if modifier == ["shift"]:
+                self.wordBeginning()
+            else:
+                self.wordPrevious()
+        if keycode[1] in ["right", "down"]:
+            if modifier == ["shift"]:
+                self.wordEnd()
+            else:
+                self.wordNext()
+        if keycode[1] == "=":
+            self.wpmUp()
+        if keycode[1] == "-":
+            self.wpmDown()
+        if keycode[1] == "v":
+            self.paste()
+
+    def _keyboard_closed(self):
+        self._keyboard.unbind(on_key_down=self._on_keyboard_down)
+        # self._keyboard.unbind(on_key_up=self._on_keyboard_up)
+        self._keyboard = None
+    
+    def _on_keyboard_down(self):
+        pass
+
+    def on_request_close(self):
+        self.config.set("somanywords", "paragraphIndex", self.paragraphIndex)
+        self.config.set("somanywords", "wordIndex", self.wordIndex)
+        self.config.write()
+        return True
+
+
+if __name__ == "__main__":
+    Config.read("kivy.ini")
+    Config.setdefault("graphics", "width", "1000")
+    Config.setdefault("graphics", "height", "400")
+    Config.write()
+    LabelBase.register(name="Source Code Pro", fn_regular="SourceCodePro[wght].ttf")
+    SoManyWordsApp().run()
+    Config.set("graphics", "width", Window.size[0])
+    Config.set("graphics", "height", Window.size[1])
+    Config.write()
