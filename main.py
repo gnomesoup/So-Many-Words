@@ -13,25 +13,34 @@ from kivy.utils import get_color_from_hex
 from kivy.config import Config
 from kivy.metrics import dp
 
-from pypdf import PdfReader
+# from pypdf import PdfReader
+import os.path
 import re
 
-# print(get_color_from_hex("#F37F23"))
+
+def get_config_file_name():
+    # return any file name here
+    configDir = os.path.join(os.path.expanduser('~'), '.somanywords')
+    if not os.path.exists(configDir):
+        os.mkdir(configDir)
+    configPath =  str(os.path.join(configDir, 'somanywords.ini'))
+    print(f"{configPath=}")
+    return configPath
 
 
-def readPDF(fileName):
-    try:
-        reader = PdfReader(fileName)
-        if reader.is_encrypted:
-            return "PDF is encrypted"
-        text = ""
-        for page in reader.pages:
-            text = text + page.extract_text()
-    except Exception as e:
-        return f"Error reading PDF: {e}"
-    if not text:
-        return "No text was extracted from the PDF file"
-    return text
+# def readPDF(fileName):
+#     try:
+#         reader = PdfReader(fileName)
+#         if reader.is_encrypted:
+#             return "PDF is encrypted"
+#         text = ""
+#         for page in reader.pages:
+#             text = text + page.extract_text()
+#     except Exception as e:
+#         return f"Error reading PDF: {e}"
+#     if not text:
+#         return "No text was extracted from the PDF file"
+#     return text
 
 
 def macClipboardPaste():
@@ -286,6 +295,9 @@ class SoManyWordsApp(App):
         continuePlay = True
         if self.paragraphIndex < 0:
             self.paragraphIndex = 0
+        elif self.paragraphIndex >= len(self.words):
+            self.resetIndexes()
+            continuePlay = False
         if self.wordIndex == len(self.words[self.paragraphIndex]) - 1:
             if self.paragraphIndex == len(self.words) - 1:
                 self.atEndOfWords = True
@@ -298,7 +310,7 @@ class SoManyWordsApp(App):
             self.paragraphIndex -= 1
             self.wordIndex = len(self.words[self.paragraphIndex]) - 1
             self.wordSubIndex = -1
-        if self.paragraphIndex < 0:
+        if self.paragraphIndex == len(self.words):
             self.resetIndexes()
             continuePlay = False
         # self.root.ids.debugLabel.text = (
