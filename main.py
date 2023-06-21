@@ -84,13 +84,14 @@ class SoManyWordsApp(App):
         super().__init__(**kwargs)
 
         self._keyboard = Window.request_keyboard(self._keyboard_closed, None)
-        self._keyboard.bind(on_key_down=self._keyboard_down)
-        Window.bind(on_dropfile=self._on_file_drop)
-        Window.size = (
-            int(Config.getdefault("graphics", "width", 1000)),
-            int(Config.getdefault("graphics", "height", 500)),
-        )
-        Clock.schedule_once(self.wordUpdate, 2)
+        # self._keyboard.bind(on_key_down=self._keyboard_down)
+        # Window.bind(on_dropfile=self._on_file_drop)
+        # Window.size = (
+        #     int(Config.getdefault("graphics", "width", 1000)),
+        #     int(Config.getdefault("graphics", "height", 500)),
+        # )
+        # Clock.schedule_once(self.wordUpdate, 2)
+        # self.root.ids.debugLabel.text = get_config_file_name()
 
     words = ListProperty()
     wordIndex = NumericProperty(0)
@@ -102,21 +103,10 @@ class SoManyWordsApp(App):
     wordIsSubWord = BooleanProperty(False)
 
     def build(self):
-        self.icon = 'App Icons MacOS 12-assets/Icon-MacOS-256x256@1x.png'
-        self.words = textClean(self.config.get("somanywords", "text"))
-        self.wpm = int(self.config.get("somanywords", "wpm"))
-        self.paragraphIndex = int(self.config.get("somanywords", "paragraphIndex"))
-        self.wordIndex = int(self.config.get("somanywords", "wordIndex"))
-        layout = SoManyWordsLayout()
-        # layout.ids.menuBar.pos_hint = 0
-        # layout.ids.debugLabel.text = (
-        #     f"[{self.paragraphIndex}, {self.wordIndex}, {self.wordSubIndex}]"
-        # )
-        return layout
-
-    def build_config(self, config):
-        config.read("somanywords.ini")
-        config.setdefaults(
+        print("build")
+        self.icon = 'icon.png'
+        print(f"{Config.filename=}")
+        Config.setdefaults(
             "somanywords",
             {
                 "wpm": "250",
@@ -127,6 +117,29 @@ class SoManyWordsApp(App):
                 "paragraphIndex": "0",
             },
         )
+        self.words = textClean(Config.get("somanywords", "text"))
+        self.wpm = int(Config.get("somanywords", "wpm"))
+        self.paragraphIndex = int(Config.get("somanywords", "paragraphIndex"))
+        self.wordIndex = int(Config.get("somanywords", "wordIndex"))
+        layout = SoManyWordsLayout()
+        return layout
+
+    # def build_config(self, config):
+    #     print("build_config")
+    #     config.read(get_config_file_name())
+    #     config.setdefaults(
+    #         "somanywords",
+    #         {
+    #             "wpm": "250",
+    #             "text": "This utility will display words to you one at a time at your desired "
+    #             "speed. You can set the words-per-minute below.\nCopy text to the clipboard"
+    #             ' and hit the "Paste" button to get started.',
+    #             "wordIndex": "0",
+    #             "paragraphIndex": "0",
+    #         },
+    #     )
+    #     print(f"{Config.filename=}")
+    #     config.write()
 
     def on_pre_enter(self):
         Clock.schedule_once(self.wakeupApp, 0.25)
@@ -158,9 +171,9 @@ class SoManyWordsApp(App):
                 self.clock.cancel()
             except:
                 pass
-            self.config.set("somanywords", "paragraphIndex", self.paragraphIndex)
-            self.config.set("somanywords", "wordIndex", self.wordIndex)
-            self.config.write()
+            Config.set("somanywords", "paragraphIndex", self.paragraphIndex)
+            Config.set("somanywords", "wordIndex", self.wordIndex)
+            Config.write()
 
     def wordNext(self):
         self.playPause(status="pause")
@@ -321,15 +334,15 @@ class SoManyWordsApp(App):
     def wpmUp(self):
         self.playPause(status="pause")
         self.wpm += 10
-        self.config.set("somanywords", "wpm", self.wpm)
-        self.config.write()
+        Config.set("somanywords", "wpm", self.wpm)
+        Config.write()
         self.root.ids.wpmInput.text = str(self.wpm)
 
     def wpmDown(self):
         self.playPause(status="pause")
         self.wpm -= 10
-        self.config.set("somanywords", "wpm", self.wpm)
-        self.config.write()
+        Config.set("somanywords", "wpm", self.wpm)
+        Config.write()
         self.root.ids.wpmInput.text = str(self.wpm)
 
     def wpmManualInput(self):
@@ -342,14 +355,16 @@ class SoManyWordsApp(App):
         self.root.ids.mainFloat.remove_widget(instance)
 
     def paste(self):
+        print("paste")
         try:
             self.clock.cancel()
         except:
             pass
         self.resetIndexes()
-        self.config.set("somanywords", "text", Clipboard.paste())
-        self.config.write()
-        self.words = textClean(self.config.get("somanywords", "text"))
+        Config.set("somanywords", "text", Clipboard.paste())
+        print(f"{Config.filename=}")
+        Config.write()
+        self.words = textClean(Config.get("somanywords", "text"))
         self.playPause(status="play")
 
     def _on_file_drop(self, window, filepath):
@@ -387,19 +402,11 @@ class SoManyWordsApp(App):
         pass
 
     def on_request_close(self):
-        self.config.set("somanywords", "paragraphIndex", self.paragraphIndex)
-        self.config.set("somanywords", "wordIndex", self.wordIndex)
-        self.config.write()
+        Config.set("somanywords", "paragraphIndex", self.paragraphIndex)
+        Config.set("somanywords", "wordIndex", self.wordIndex)
+        Config.write()
         return True
 
 
 if __name__ == "__main__":
-    Config.read("kivy.ini")
-    Config.setdefault("graphics", "width", "1000")
-    Config.setdefault("graphics", "height", "400")
-    Config.write()
-    LabelBase.register(name="Source Code Pro", fn_regular="SourceCodePro[wght].ttf")
     SoManyWordsApp().run()
-    Config.set("graphics", "width", Window.size[0])
-    Config.set("graphics", "height", Window.size[1])
-    Config.write()
